@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Basic Auth Remember</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="options">
+  <h1>Basic Auth Remember</h1>
+  <p class="note">Credentials are stored unencrypted in this Firefox profile's extension storage.</p>
+
+  <table>
+    <thead><tr><th>Host</th><th>Username</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <h2>Add / update</h2>
+  <form id="form">
+    <label>Host <input id="host" placeholder="example.com or localhost:8080" required></label>
+    <label>Username <input id="username" autocomplete="off" required></label>
+    <label>Password <input id="password" type="password" autocomplete="off"></label>
+    <div class="row"><button type="submit">Save</button></div>
+  </form>
+
+  <script src="store.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

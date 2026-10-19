@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="popup">
+  <h1>Basic Auth</h1>
+  <form id="form">
+    <label>Host <input id="host" required></label>
+    <label>Username <input id="username" autocomplete="off" required></label>
+    <label>Password <input id="password" type="password" autocomplete="off"></label>
+    <div class="row">
+      <button type="submit">Save</button>
+      <button type="button" id="delete">Forget</button>
+    </div>
+  </form>
+  <p id="status"></p>
+  <p><a href="#" id="manage">Manage all…</a></p>
+  <script src="store.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
