@@ -52,6 +52,20 @@ $("form").addEventListener("submit", async (e) => {
   render();
 });
 
+$("use-current").addEventListener("click", async () => {
+  const key = await currentSiteHostKey();
+  $("status").classList.toggle("error", !key);
+  if (!key) {
+    $("status").textContent = "No website tab found.";
+    return;
+  }
+  const cred = (await loadCredentials())[key];
+  $("host").value = key;
+  $("username").value = cred ? cred.username : "";
+  $("password").value = cred ? cred.password : "";
+  $("status").textContent = cred ? "Saved credentials found." : "";
+});
+
 $("test-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const [host, port] = $("test-host").value.trim().split(":");

@@ -20,7 +20,12 @@
 
   <h2>Add / update</h2>
   <form id="form">
-    <label>Host or pattern <input id="host" placeholder="example.com, localhost:8080, *.example.com, /^dev\d+\.example\.com$/" required></label>
+    <label>Host or pattern
+      <span class="input-row">
+        <input id="host" placeholder="example.com, localhost:8080, *.example.com, /^dev\d+\.example\.com$/" required>
+        <button type="button" id="use-current" title="Use the host of the most recently viewed website tab">Current host</button>
+      </span>
+    </label>
     <label>Username <input id="username" autocomplete="off" required></label>
     <label>Password <input id="password" type="password" autocomplete="off"></label>
     <div class="row"><button type="submit">Save</button></div>

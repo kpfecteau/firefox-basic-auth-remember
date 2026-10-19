@@ -88,3 +88,13 @@ async function deleteCredential(key) {
   delete all[key];
   await browser.storage.local.set({ [STORAGE_KEY]: all });
 }
+
+// Host key of the most recently used web page tab (skips extension pages such
+// as the options tab itself). Returns null when there is none.
+async function currentSiteHostKey() {
+  const tabs = await browser.tabs.query({});
+  const sites = tabs
+    .filter((t) => /^https?:/.test(t.url || ""))
+    .sort((a, b) => b.lastAccessed - a.lastAccessed);
+  return sites.length ? hostKeyFromUrl(sites[0].url) : null;
+}

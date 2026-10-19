@@ -13,3 +13,6 @@ th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ddd; }
 .warning { background: #fff3cd; color: #664d03; padding: 6px 8px; border-radius: 4px; }
 #status.error { color: #c33; }
 code { font-size: 12px; }
+.input-row { display: flex; gap: 6px; margin-top: 2px; }
+.input-row input { margin-top: 0; flex: 1; min-width: 0; }
+.input-row button { white-space: nowrap; }

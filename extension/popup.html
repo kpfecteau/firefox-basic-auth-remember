@@ -10,7 +10,12 @@
     Not allowed in private windows. Enable "Run in Private Windows" in about:addons.
   </p>
   <form id="form">
-    <label>Host or pattern <input id="host" placeholder="*.example.com" required></label>
+    <label>Host or pattern
+      <span class="input-row">
+        <input id="host" placeholder="*.example.com" required>
+        <button type="button" id="use-current" title="Use the current tab's host">Current host</button>
+      </span>
+    </label>
     <label>Username <input id="username" autocomplete="off" required></label>
     <label>Password <input id="password" type="password" autocomplete="off"></label>
     <div class="row">

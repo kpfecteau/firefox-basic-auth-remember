@@ -37,6 +37,16 @@ async function init() {
 
 $("host").addEventListener("change", () => fillFor(normalizePattern($("host").value)));
 
+$("use-current").addEventListener("click", async () => {
+  const key = await currentSiteHostKey();
+  if (!key) {
+    setStatus("No website tab found.", true);
+    return;
+  }
+  $("host").value = key;
+  await fillFor(key);
+});
+
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const pattern = normalizePattern($("host").value);

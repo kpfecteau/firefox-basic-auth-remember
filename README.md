@@ -35,6 +35,9 @@ For quick hacking instead, use `about:debugging` → This Firefox →
 
 - Click the toolbar button on a site: the host is pre-filled; enter the
   username/password and **Save**. Reload the page.
+- **Current host** (popup and options page) fills the host field from the
+  current tab, or on the options page the most recently viewed website tab.
+  Edit it into a pattern (e.g. `*.example.com`) before saving if you like.
 - **Manage all…** (or the add-on's Preferences) lists, edits and deletes
   saved entries, and has a **Test a host** box to see which entry matches.
 - The toolbar badge shows ✓ when credentials were supplied on that tab and
