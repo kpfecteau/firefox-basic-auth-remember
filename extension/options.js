@@ -40,9 +40,29 @@ async function render() {
 
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  await saveCredential($("host").value.trim().toLowerCase(), $("username").value, $("password").value);
+  const pattern = normalizePattern($("host").value);
+  if (!isValidPattern(pattern)) {
+    $("status").textContent = "Invalid regular expression.";
+    $("status").classList.add("error");
+    return;
+  }
+  await saveCredential(pattern, $("username").value, $("password").value);
+  $("status").textContent = "";
   e.target.reset();
   render();
+});
+
+$("test-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const [host, port] = $("test-host").value.trim().split(":");
+  const match = findCredential(await loadCredentials(), host, port, "http");
+  $("test-result").textContent = match
+    ? `Matches ${match.pattern} → ${match.username}`
+    : "No saved credentials match.";
+});
+
+browser.extension.isAllowedIncognitoAccess().then((allowed) => {
+  $("private-warning").hidden = allowed;
 });
 
 browser.storage.onChanged.addListener(render);

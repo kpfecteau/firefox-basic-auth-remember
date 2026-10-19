@@ -1,41 +1,59 @@
 const $ = (id) => document.getElementById(id);
 
-function setStatus(text) {
+function setStatus(text, isError = false) {
   $("status").textContent = text;
+  $("status").classList.toggle("error", isError);
 }
 
-async function fillFor(key) {
-  const cred = (await loadCredentials())[key];
+async function fillFor(pattern) {
+  const cred = (await loadCredentials())[pattern];
   $("username").value = cred ? cred.username : "";
   $("password").value = cred ? cred.password : "";
   setStatus(cred ? "Saved credentials found." : "");
 }
 
 async function init() {
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  try {
-    $("host").value = hostKeyFromUrl(tab.url);
-  } catch {
-    $("host").value = "";
+  if (!(await browser.extension.isAllowedIncognitoAccess())) {
+    $("private-warning").hidden = false;
   }
-  if ($("host").value) await fillFor($("host").value);
+
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  let url;
+  try {
+    url = new URL(tab.url);
+  } catch {
+    return;
+  }
+  if (!url.hostname) return;
+
+  const scheme = url.protocol.replace(":", "");
+  const match = findCredential(await loadCredentials(), url.hostname, url.port, scheme);
+  $("host").value = match ? match.pattern : hostKeyFromUrl(tab.url);
+  await fillFor($("host").value);
+  if (match && match.pattern !== hostKeyFromUrl(tab.url)) {
+    setStatus(`Matched by pattern ${match.pattern}`);
+  }
 }
 
-$("host").addEventListener("change", () => fillFor($("host").value.trim().toLowerCase()));
+$("host").addEventListener("change", () => fillFor(normalizePattern($("host").value)));
 
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const key = $("host").value.trim().toLowerCase();
-  await saveCredential(key, $("username").value, $("password").value);
-  setStatus(`Saved for ${key}. Reload the page to sign in.`);
+  const pattern = normalizePattern($("host").value);
+  if (!isValidPattern(pattern)) {
+    setStatus("Invalid regular expression.", true);
+    return;
+  }
+  await saveCredential(pattern, $("username").value, $("password").value);
+  setStatus(`Saved for ${pattern}. Reload the page to sign in.`);
 });
 
 $("delete").addEventListener("click", async () => {
-  const key = $("host").value.trim().toLowerCase();
-  await deleteCredential(key);
+  const pattern = normalizePattern($("host").value);
+  await deleteCredential(pattern);
   $("username").value = "";
   $("password").value = "";
-  setStatus(`Forgot ${key}.`);
+  setStatus(`Forgot ${pattern}.`);
 });
 
 $("manage").addEventListener("click", (e) => {

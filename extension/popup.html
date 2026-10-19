@@ -6,8 +6,11 @@
 </head>
 <body class="popup">
   <h1>Basic Auth</h1>
+  <p id="private-warning" class="warning" hidden>
+    Not allowed in private windows. Enable "Run in Private Windows" in about:addons.
+  </p>
   <form id="form">
-    <label>Host <input id="host" required></label>
+    <label>Host or pattern <input id="host" placeholder="*.example.com" required></label>
     <label>Username <input id="username" autocomplete="off" required></label>
     <label>Password <input id="password" type="password" autocomplete="off"></label>
     <div class="row">

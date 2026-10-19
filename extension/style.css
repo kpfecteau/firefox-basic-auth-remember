@@ -10,3 +10,6 @@ input { display: block; width: 100%; box-sizing: border-box; padding: 4px; margi
 #status { color: #2a7; min-height: 1em; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ddd; }
+.warning { background: #fff3cd; color: #664d03; padding: 6px 8px; border-radius: 4px; }
+#status.error { color: #c33; }
+code { font-size: 12px; }

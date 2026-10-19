@@ -7,20 +7,38 @@
 </head>
 <body class="options">
   <h1>Basic Auth Remember</h1>
+  <p id="private-warning" class="warning" hidden>
+    This extension is not allowed in private windows, so logins there will still prompt.
+    In about:addons → Basic Auth Remember → Details, set "Run in Private Windows" to Allow.
+  </p>
   <p class="note">Credentials are stored unencrypted in this Firefox profile's extension storage.</p>
 
   <table>
-    <thead><tr><th>Host</th><th>Username</th><th></th></tr></thead>
+    <thead><tr><th>Host / pattern</th><th>Username</th><th></th></tr></thead>
     <tbody id="rows"></tbody>
   </table>
 
   <h2>Add / update</h2>
   <form id="form">
-    <label>Host <input id="host" placeholder="example.com or localhost:8080" required></label>
+    <label>Host or pattern <input id="host" placeholder="example.com, localhost:8080, *.example.com, /^dev\d+\.example\.com$/" required></label>
     <label>Username <input id="username" autocomplete="off" required></label>
     <label>Password <input id="password" type="password" autocomplete="off"></label>
     <div class="row"><button type="submit">Save</button></div>
   </form>
+  <p id="status"></p>
+
+  <h2>Test a host</h2>
+  <form id="test-form">
+    <label>Host[:port] <input id="test-host" placeholder="api.dev.example.com:8443" required></label>
+    <div class="row"><button type="submit">Check</button></div>
+  </form>
+  <p id="test-result"></p>
+
+  <p class="note">
+    Patterns: exact <code>host</code> or <code>host:port</code>; wildcard with <code>*</code>
+    (<code>*.example.com</code>); or a regular expression in slashes
+    (<code>/^dev\d+\.example\.com$/</code>). Exact matches win, then wildcards, then regexes.
+  </p>
 
   <script src="store.js"></script>
   <script src="options.js"></script>
