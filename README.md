@@ -39,6 +39,8 @@ For quick hacking instead, use `about:debugging` → This Firefox →
   saved entries, and has a **Test a host** box to see which entry matches.
 - The toolbar badge shows ✓ when credentials were supplied on that tab and
   ✗ when the server rejected them.
+- If saved credentials are wrong, the extension steps aside and Firefox's
+  normal login dialog appears (no retry loop). Proxy auth is ignored.
 
 ### Host patterns
 
@@ -59,8 +61,6 @@ pattern wins. Wildcards and regexes are tested against both `host` and
 Open `about:debugging` → This Firefox → Basic Auth Remember → **Inspect** →
 Console. Every challenge logs either the matching pattern or
 "No saved credentials for host[:port]".
-- If saved credentials are wrong, the extension steps aside and Firefox's
-  normal login dialog appears (no retry loop). Proxy auth is ignored.
 
 ## Testing
 
