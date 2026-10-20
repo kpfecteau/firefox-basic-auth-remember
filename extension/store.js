@@ -1,14 +1,11 @@
-// Credential storage shared by the background script, popup and options page.
-// Entries are keyed by a host pattern; credentials live in
-// browser.storage.local, which is plain text inside the Firefox profile.
+// Host-pattern helpers shared by the background script, popup and options
+// page, plus the message wrapper the pages use to reach the background vault.
 //
 // Pattern forms, tried in this order (most specific wins):
 //   example.com, localhost:8080   exact host[:port] (port omitted when default)
 //   *.example.com, dev-*.co:8443  wildcard; * matches any characters
 //   /^dev\d+\.example\.com$/      regular expression, between slashes
 // Wildcards and regexes are tested against both "host" and "host:port".
-
-const STORAGE_KEY = "credentials";
 
 // Firefox reports the challenger port as -1 when the URL uses the default port.
 function hostKey(host, port, scheme) {
@@ -74,21 +71,9 @@ function normalizePattern(pattern) {
   return patternKind(pattern) === "regex" ? pattern : pattern.toLowerCase();
 }
 
-async function loadCredentials() {
-  const data = await browser.storage.local.get(STORAGE_KEY);
-  return data[STORAGE_KEY] || {};
-}
-
-async function saveCredential(key, username, password) {
-  const all = await loadCredentials();
-  all[key] = { username, password };
-  await browser.storage.local.set({ [STORAGE_KEY]: all });
-}
-
-async function deleteCredential(key) {
-  const all = await loadCredentials();
-  delete all[key];
-  await browser.storage.local.set({ [STORAGE_KEY]: all });
+// Sends a request to the background vault (see handlers in background.js).
+function vault(type, payload = {}) {
+  return browser.runtime.sendMessage({ type, ...payload });
 }
 
 // Host key of the most recently used web page tab (skips extension pages such

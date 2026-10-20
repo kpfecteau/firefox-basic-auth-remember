@@ -9,7 +9,22 @@
   <p id="private-warning" class="warning" hidden>
     Not allowed in private windows. Enable "Run in Private Windows" in about:addons.
   </p>
-  <form id="form">
+
+  <form id="setup-form" hidden>
+    <p>Choose a passphrase to encrypt saved credentials.
+      You'll enter it once each time Firefox starts.</p>
+    <p id="legacy-note" class="note" hidden></p>
+    <label>Passphrase <input id="setup-pass" type="password" required></label>
+    <label>Confirm <input id="setup-confirm" type="password" required></label>
+    <div class="row"><button type="submit">Encrypt &amp; unlock</button></div>
+  </form>
+
+  <form id="unlock-form" hidden>
+    <label>Passphrase <input id="unlock-pass" type="password" required></label>
+    <div class="row"><button type="submit">Unlock</button></div>
+  </form>
+
+  <form id="form" hidden>
     <label>Host or pattern
       <span class="input-row">
         <input id="host" placeholder="*.example.com" required>
@@ -21,8 +36,10 @@
     <div class="row">
       <button type="submit">Save</button>
       <button type="button" id="delete">Forget</button>
+      <button type="button" id="lock">Lock</button>
     </div>
   </form>
+
   <p id="status"></p>
   <p><a href="#" id="manage">Manage all…</a></p>
   <script src="store.js"></script>

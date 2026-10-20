@@ -2,7 +2,8 @@
 
 A local Firefox extension that remembers HTTP Basic (and Digest) auth
 credentials per host and supplies them automatically, so the login dialog
-never appears for saved sites.
+never appears for saved sites. Saved logins are encrypted with a passphrase
+you unlock once per Firefox session.
 
 ## Why an extension?
 
@@ -33,6 +34,8 @@ For quick hacking instead, use `about:debugging` → This Firefox →
 
 ## Usage
 
+- The first time, the popup asks you to set a passphrase; after each
+  Firefox restart it asks you to unlock.
 - Click the toolbar button on a site: the host is pre-filled; enter the
   username/password and **Save**. Reload the page.
 - **Current host** (popup and options page) fills the host field from the
@@ -68,7 +71,7 @@ Console. Every challenge logs either the matching pattern or
 ## Testing
 
 ```sh
-node --test test/match.test.js   # pattern matching unit tests
+node --test test/*.test.js      # pattern matching and encryption unit tests
 node test/server.js              # http://localhost:8765, user / secret
 ```
 
@@ -76,8 +79,24 @@ Save `localhost:8765` → `user` / `secret` in the popup and reload: the page
 shows "Authenticated!" with no dialog. Save a wrong password: the native
 dialog appears once.
 
-## Security note
+## Encryption
 
-Credentials are stored **unencrypted** in the extension's `storage.local`
-inside your Firefox profile. Anyone who can read your profile directory can
-read them. Fine for dev/staging sites; don't store anything critical.
+Saved logins are encrypted with a passphrase you choose:
+
+- AES-256-GCM, with the key derived from your passphrase by PBKDF2-SHA256
+  (600,000 iterations, random salt). Only the ciphertext is written to the
+  extension's `storage.local`.
+- The key and decrypted logins live only in the background page's memory.
+  After each Firefox restart the toolbar icon shows 🔒; open the popup and
+  enter the passphrase once. While locked, sites show Firefox's normal
+  login dialog.
+- **Lock** in the popup or **Lock now** on the options page clears them
+  from memory. **Change passphrase** is on the options page.
+- A forgotten passphrase can't be recovered: **Delete all saved
+  credentials** on the options page's locked screen wipes the vault so you
+  can start over.
+- Upgrading from 1.2.x: the first time you set a passphrase, your existing
+  plaintext logins are encrypted and the plaintext copy is deleted.
+
+While unlocked, anything that can inspect Firefox's memory or the extension's
+background page (`about:debugging` → Inspect) can see the logins.

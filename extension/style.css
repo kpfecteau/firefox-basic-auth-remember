@@ -16,3 +16,5 @@ code { font-size: 12px; }
 .input-row { display: flex; gap: 6px; margin-top: 2px; }
 .input-row input { margin-top: 0; flex: 1; min-width: 0; }
 .input-row button { white-space: nowrap; }
+section h2:first-child { margin-top: 16px; }
+.options .row { margin: 8px 0; }

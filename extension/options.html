@@ -11,39 +11,71 @@
     This extension is not allowed in private windows, so logins there will still prompt.
     In about:addons → Basic Auth Remember → Details, set "Run in Private Windows" to Allow.
   </p>
-  <p class="note">Credentials are stored unencrypted in this Firefox profile's extension storage.</p>
-
-  <table>
-    <thead><tr><th>Host / pattern</th><th>Username</th><th></th></tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-
-  <h2>Add / update</h2>
-  <form id="form">
-    <label>Host or pattern
-      <span class="input-row">
-        <input id="host" placeholder="example.com, localhost:8080, *.example.com, /^dev\d+\.example\.com$/" required>
-        <button type="button" id="use-current" title="Use the host of the most recently viewed website tab">Current host</button>
-      </span>
-    </label>
-    <label>Username <input id="username" autocomplete="off" required></label>
-    <label>Password <input id="password" type="password" autocomplete="off"></label>
-    <div class="row"><button type="submit">Save</button></div>
-  </form>
   <p id="status"></p>
 
-  <h2>Test a host</h2>
-  <form id="test-form">
-    <label>Host[:port] <input id="test-host" placeholder="api.dev.example.com:8443" required></label>
-    <div class="row"><button type="submit">Check</button></div>
-  </form>
-  <p id="test-result"></p>
+  <section id="setup" hidden>
+    <h2>Set a passphrase</h2>
+    <p>Saved credentials are encrypted with this passphrase (AES-256-GCM, PBKDF2-SHA256).
+      You'll enter it once each time Firefox starts. It can't be recovered if forgotten.</p>
+    <p id="legacy-note" class="note" hidden></p>
+    <form id="setup-form">
+      <label>Passphrase <input id="setup-pass" type="password" required></label>
+      <label>Confirm <input id="setup-confirm" type="password" required></label>
+      <div class="row"><button type="submit">Encrypt &amp; unlock</button></div>
+    </form>
+  </section>
 
-  <p class="note">
-    Patterns: exact <code>host</code> or <code>host:port</code>; wildcard with <code>*</code>
-    (<code>*.example.com</code>); or a regular expression in slashes
-    (<code>/^dev\d+\.example\.com$/</code>). Exact matches win, then wildcards, then regexes.
-  </p>
+  <section id="locked" hidden>
+    <h2>Locked</h2>
+    <form id="unlock-form">
+      <label>Passphrase <input id="unlock-pass" type="password" required></label>
+      <div class="row"><button type="submit">Unlock</button></div>
+    </form>
+    <p class="note">Forgot it? <button type="button" id="reset">Delete all saved credentials</button></p>
+  </section>
+
+  <section id="unlocked" hidden>
+    <div class="row"><button type="button" id="lock">Lock now</button></div>
+
+    <table>
+      <thead><tr><th>Host / pattern</th><th>Username</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <h2>Add / update</h2>
+    <form id="form">
+      <label>Host or pattern
+        <span class="input-row">
+          <input id="host" placeholder="example.com, localhost:8080, *.example.com, /^dev\d+\.example\.com$/" required>
+          <button type="button" id="use-current" title="Use the host of the most recently viewed website tab">Current host</button>
+        </span>
+      </label>
+      <label>Username <input id="username" autocomplete="off" required></label>
+      <label>Password <input id="password" type="password" autocomplete="off"></label>
+      <div class="row"><button type="submit">Save</button></div>
+    </form>
+
+    <h2>Test a host</h2>
+    <form id="test-form">
+      <label>Host[:port] <input id="test-host" placeholder="api.dev.example.com:8443" required></label>
+      <div class="row"><button type="submit">Check</button></div>
+    </form>
+    <p id="test-result"></p>
+
+    <p class="note">
+      Patterns: exact <code>host</code> or <code>host:port</code>; wildcard with <code>*</code>
+      (<code>*.example.com</code>); or a regular expression in slashes
+      (<code>/^dev\d+\.example\.com$/</code>). Exact matches win, then wildcards, then regexes.
+    </p>
+
+    <h2>Change passphrase</h2>
+    <form id="change-form">
+      <label>Current passphrase <input id="change-current" type="password" required></label>
+      <label>New passphrase <input id="change-next" type="password" required></label>
+      <label>Confirm new <input id="change-confirm" type="password" required></label>
+      <div class="row"><button type="submit">Change</button></div>
+    </form>
+  </section>
 
   <script src="store.js"></script>
   <script src="options.js"></script>
