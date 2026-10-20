@@ -3,79 +3,127 @@
 <head>
   <meta charset="utf-8">
   <title>Basic Auth Remember</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="options.css">
 </head>
-<body class="options">
-  <h1>Basic Auth Remember</h1>
+<body>
+  <!-- The vault and its state. data-state drives the dot: new | locked | unlocked. -->
+  <header class="band vault" id="vault" data-state="locked">
+    <svg class="band-key" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M12 12h10M18 12v3.5M21 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <div class="band-text">
+      <h1>Basic Auth Remember</h1>
+      <p class="band-state"><span class="dot" aria-hidden="true"></span><span id="vault-state"></span></p>
+    </div>
+    <button type="button" id="lock" class="quiet" hidden>Lock now</button>
+  </header>
+
   <p id="private-warning" class="warning" hidden>
-    This extension is not allowed in private windows, so logins there will still prompt.
-    In about:addons → Basic Auth Remember → Details, set "Run in Private Windows" to Allow.
+    Private windows still ask for logins. In about:addons → Basic Auth Remember → Details,
+    set “Run in Private Windows” to Allow.
   </p>
-  <p id="status"></p>
 
-  <section id="setup" hidden>
-    <h2>Set a passphrase</h2>
-    <p>Saved credentials are encrypted with this passphrase (AES-256-GCM, PBKDF2-SHA256).
-      You'll enter it once each time Firefox starts. It can't be recovered if forgotten.</p>
-    <p id="legacy-note" class="note" hidden></p>
-    <form id="setup-form">
-      <label>Passphrase <input id="setup-pass" type="password" required></label>
-      <label>Confirm <input id="setup-confirm" type="password" required></label>
-      <div class="row"><button type="submit">Encrypt &amp; unlock</button></div>
-    </form>
-  </section>
+  <main>
+    <p id="status" class="status" role="status"></p>
 
-  <section id="locked" hidden>
-    <h2>Locked</h2>
-    <form id="unlock-form">
-      <label>Passphrase <input id="unlock-pass" type="password" required></label>
-      <div class="row"><button type="submit">Unlock</button></div>
-    </form>
-    <p class="note">Forgot it? <button type="button" id="reset">Delete all saved credentials</button></p>
-  </section>
+    <section id="setup" hidden>
+      <h2>Choose a passphrase</h2>
+      <p class="hint">
+        It encrypts your saved logins (AES-256-GCM, key from PBKDF2-SHA256). You’ll enter it
+        once each time Firefox starts. It can’t be recovered if you forget it.
+      </p>
+      <p id="legacy-note" class="hint" hidden></p>
+      <form id="setup-form" class="narrow">
+        <label for="setup-pass">Passphrase</label>
+        <input id="setup-pass" type="password" required>
+        <label for="setup-confirm">Confirm passphrase</label>
+        <input id="setup-confirm" type="password" required>
+        <div class="actions"><button type="submit" class="primary">Encrypt and unlock</button></div>
+      </form>
+    </section>
 
-  <section id="unlocked" hidden>
-    <div class="row"><button type="button" id="lock">Lock now</button></div>
+    <section id="locked" hidden>
+      <h2>Unlock to manage your logins</h2>
+      <form id="unlock-form" class="narrow">
+        <label for="unlock-pass">Passphrase</label>
+        <input id="unlock-pass" type="password" required>
+        <div class="actions"><button type="submit" class="primary">Unlock</button></div>
+      </form>
+      <p class="hint forgot">
+        Forgot your passphrase? Your saved logins can’t be decrypted without it.
+        <button type="button" id="reset" class="danger">Delete all saved logins</button>
+      </p>
+    </section>
 
-    <table>
-      <thead><tr><th>Host / pattern</th><th>Username</th><th></th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <section id="unlocked" hidden>
+      <h2>Saved logins</h2>
+      <table class="logins">
+        <thead>
+          <tr><th scope="col">Host or pattern</th><th scope="col">Username</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
 
-    <h2>Add / update</h2>
-    <form id="form">
-      <label>Host or pattern
-        <span class="input-row">
-          <input id="host" placeholder="example.com, localhost:8080, *.example.com, /^dev\d+\.example\.com$/" required>
-          <button type="button" id="use-current" title="Use the host of the most recently viewed website tab">Current host</button>
-        </span>
-      </label>
-      <label>Username <input id="username" autocomplete="off" required></label>
-      <label>Password <input id="password" type="password" autocomplete="off"></label>
-      <div class="row"><button type="submit">Save</button></div>
-    </form>
+      <div class="pair">
+        <section>
+          <h2>Add or update a login</h2>
+          <form id="form">
+            <label for="host">Host or pattern</label>
+            <div class="input-row">
+              <input id="host" class="literal" placeholder="*.example.com" spellcheck="false" required>
+              <button type="button" id="use-current" class="quiet" title="Fill in the host of the website you viewed most recently">Recent site</button>
+            </div>
+            <label for="username">Username</label>
+            <input id="username" class="literal" autocomplete="off" spellcheck="false" required>
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="off">
+            <div class="actions"><button type="submit" class="primary">Save login</button></div>
+          </form>
+        </section>
 
-    <h2>Test a host</h2>
-    <form id="test-form">
-      <label>Host[:port] <input id="test-host" placeholder="api.dev.example.com:8443" required></label>
-      <div class="row"><button type="submit">Check</button></div>
-    </form>
-    <p id="test-result"></p>
+        <section>
+          <h2>Test a host</h2>
+          <p class="hint">See which saved login a host would use.</p>
+          <form id="test-form">
+            <label for="test-host">Host, with a port if it isn’t 80 or 443</label>
+            <div class="input-row">
+              <input id="test-host" class="literal" placeholder="api.dev.example.com:8443" spellcheck="false" required>
+              <button type="submit" class="quiet">Check</button>
+            </div>
+          </form>
+          <p id="test-result" class="test-result" role="status"></p>
+        </section>
+      </div>
 
-    <p class="note">
-      Patterns: exact <code>host</code> or <code>host:port</code>; wildcard with <code>*</code>
-      (<code>*.example.com</code>); or a regular expression in slashes
-      (<code>/^dev\d+\.example\.com$/</code>). Exact matches win, then wildcards, then regexes.
-    </p>
+      <details class="patterns">
+        <summary>How host patterns work</summary>
+        <dl>
+          <dt><code>example.com</code>, <code>localhost:8080</code></dt>
+          <dd>That exact host, and port if it isn’t the default.</dd>
+          <dt><code>*.example.com</code></dt>
+          <dd>Any subdomain, at any depth. <code>*</code> matches any characters. Add <code>:port</code> to limit it to one port.</dd>
+          <dt><code>/^dev\d+\.example\.com$/</code></dt>
+          <dd>A regular expression between slashes, case-insensitive. Without <code>^</code> and <code>$</code> it matches anywhere in the host.</dd>
+        </dl>
+        <p class="hint">An exact match wins, then the longest matching wildcard, then the longest matching regular expression.</p>
+      </details>
 
-    <h2>Change passphrase</h2>
-    <form id="change-form">
-      <label>Current passphrase <input id="change-current" type="password" required></label>
-      <label>New passphrase <input id="change-next" type="password" required></label>
-      <label>Confirm new <input id="change-confirm" type="password" required></label>
-      <div class="row"><button type="submit">Change</button></div>
-    </form>
-  </section>
+      <section class="change">
+        <h2>Change passphrase</h2>
+        <form id="change-form" class="narrow">
+          <label for="change-current">Current passphrase</label>
+          <input id="change-current" type="password" required>
+          <label for="change-next">New passphrase</label>
+          <input id="change-next" type="password" required>
+          <label for="change-confirm">Confirm new passphrase</label>
+          <input id="change-confirm" type="password" required>
+          <div class="actions"><button type="submit" class="primary">Change passphrase</button></div>
+        </form>
+      </section>
+    </section>
+  </main>
 
   <script src="store.js"></script>
   <script src="options.js"></script>

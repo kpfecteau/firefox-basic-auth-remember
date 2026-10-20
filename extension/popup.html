@@ -2,19 +2,20 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <!-- The site in the active tab and what the extension will do there.
        data-state drives the dot: answer | none | locked | new | idle. -->
-  <header class="site" id="site" data-state="idle">
-    <svg class="site-key" viewBox="0 0 24 24" aria-hidden="true">
+  <header class="band site" id="site" data-state="idle">
+    <svg class="band-key" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="7.5" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
       <path d="M12 12h10M18 12v3.5M21 12v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     </svg>
-    <div class="site-text">
+    <div class="band-text">
       <p class="site-host" id="site-host">No website in this tab</p>
-      <p class="site-state"><span class="dot" aria-hidden="true"></span><span id="site-state"></span></p>
+      <p class="band-state"><span class="dot" aria-hidden="true"></span><span id="site-state"></span></p>
     </div>
   </header>
 
@@ -44,11 +45,11 @@
     <form id="form" hidden>
       <label for="host">Host or pattern</label>
       <div class="input-row">
-        <input id="host" placeholder="*.example.com" spellcheck="false" required>
+        <input id="host" class="literal" placeholder="*.example.com" spellcheck="false" required>
         <button type="button" id="use-current" class="quiet" title="Fill in the host of the site in this tab">This site</button>
       </div>
       <label for="username">Username</label>
-      <input id="username" autocomplete="off" spellcheck="false" required>
+      <input id="username" class="literal" autocomplete="off" spellcheck="false" required>
       <label for="password">Password</label>
       <input id="password" type="password" autocomplete="off">
       <div class="actions">
@@ -57,7 +58,7 @@
       </div>
     </form>
 
-    <p id="status" role="status"></p>
+    <p id="status" class="status" role="status"></p>
   </main>
 
   <footer>

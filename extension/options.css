@@ -1,0 +1,160 @@
+/* Options page layout. Tokens and controls come from theme.css; the steel
+   band names the vault and its state, and the saved-logins table is the
+   page's main content. */
+
+/* The band's text lines up with the content column (720px wide, 24px
+   padding); on wide windows the key hangs in the margin to its left (20px
+   key + 10px gap). */
+.vault {
+  align-items: center;
+  padding-block: 18px;
+  padding-inline:
+    max(24px, calc((100% - 720px) / 2 + 24px - 30px))
+    max(24px, calc((100% - 720px) / 2 + 24px));
+}
+
+.vault h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.vault .band-text { flex: 1; }
+
+.warning { padding-inline: max(24px, calc((100% - 720px) / 2 + 24px)); }
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 4px 24px 48px;
+}
+
+h2 {
+  margin: 20px 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.hint {
+  max-width: 62ch;
+  margin: -4px 0 12px;
+  color: var(--slate);
+  font-size: 12.5px;
+}
+
+#status { margin: 10px 0 0; }
+
+/* The status line already spaces the first heading from the band. */
+main > section > h2:first-child { margin-top: 6px; }
+
+/* Passphrase forms don't need the full width. */
+.narrow { max-width: 320px; }
+
+.forgot { margin-top: 24px; }
+
+.forgot button {
+  display: block;
+  height: auto;
+  margin-top: 4px;
+  padding: 0;
+}
+
+/* Saved logins. */
+.logins {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.logins th {
+  padding: 0 8px 6px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--slate);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.logins td {
+  padding: 8px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+}
+
+.logins th:first-child,
+.logins td:first-child { padding-left: 0; }
+
+.logins .literal {
+  font: 12.5px var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.logins .row-actions {
+  width: 1%;
+  padding-right: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.logins .row-actions button { height: 26px; padding: 0 6px; }
+
+.logins .empty {
+  padding: 16px 0;
+  color: var(--slate);
+}
+
+/* Add and Test side by side when there's room. */
+.pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px 32px;
+  margin-top: 8px;
+}
+
+@media (min-width: 640px) {
+  .pair { grid-template-columns: 1fr 1fr; }
+}
+
+.test-result {
+  min-height: 18px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.test-result code { font-size: 12px; }
+
+code { font: 12px var(--mono); }
+
+.patterns {
+  margin: 20px 0 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.patterns summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.patterns dl {
+  display: grid;
+  grid-template-columns: minmax(0, 15em) 1fr;
+  gap: 8px 16px;
+  margin: 12px 0;
+}
+
+.patterns dt { overflow-wrap: anywhere; }
+.patterns dd { margin: 0; color: var(--slate); }
+.patterns .hint { margin: 0; }
+
+.change { margin-top: 8px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

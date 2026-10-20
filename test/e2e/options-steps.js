@@ -65,9 +65,9 @@
     // A wrong passphrase surfaces in the status line (via handle()), and the
     // re-render that follows disarms the reset button.
     submit("unlock-form", { "unlock-pass": "wrong" });
-    const shown = await waitFor(() => statusText() === "Wrong passphrase");
+    const shown = await waitFor(() => statusText() === "Wrong passphrase.");
     check("unlock-error-shown", shown && $("status").classList.contains("error"), `status=${statusText()}`);
-    const disarmed = await waitFor(() => resetLabel() === "Delete all saved credentials");
+    const disarmed = await waitFor(() => resetLabel() === "Delete all saved logins");
     check("reset-disarmed-on-render", disarmed, `label=${resetLabel()}`);
 
     // Unlocking re-renders through the stateChanged broadcast.
@@ -78,21 +78,21 @@
 
     // Saving an invalid regex is refused before reaching the vault.
     submit("form", { host: "/[/", username: "u", password: "p" });
-    const refused = await waitFor(() => statusText() === "Invalid regular expression.");
+    const refused = await waitFor(() => statusText() === "That regular expression isn't valid.");
     check("invalid-regex-refused", refused && !("/[/" in (await vault("list"))), `status=${statusText()}`);
 
     // "Test a host" uses the same matching as the background.
     submit("test-form", { "test-host": "any.localhost:8765" });
-    const matched = await waitFor(() => $("test-result").textContent.startsWith("Matches"));
-    check("test-host", matched && $("test-result").textContent === "Matches *.localhost:8765 → user", $("test-result").textContent);
+    const matched = await waitFor(() => $("test-result").textContent.startsWith("Uses"));
+    check("test-host", matched && $("test-result").textContent === "Uses *.localhost:8765, signing in as user.", $("test-result").textContent);
 
     submit("test-form", { "test-host": "nowhere.example" });
-    const none = await waitFor(() => $("test-result").textContent === "No saved credentials match.");
+    const none = await waitFor(() => $("test-result").textContent === "No saved login matches this host.");
     check("test-host-no-match", none, $("test-result").textContent);
 
     // Mismatched new passphrases are caught on the page.
     submit("change-form", { "change-current": "pw2", "change-next": "a", "change-confirm": "b" });
-    check("change-mismatch", await waitFor(() => statusText() === "New passphrases don't match."), statusText());
+    check("change-mismatch", await waitFor(() => statusText() === "The new passphrases don't match."), statusText());
 
     // Lock now hides the table again.
     $("lock").click();

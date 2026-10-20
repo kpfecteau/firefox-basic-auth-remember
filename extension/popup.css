@@ -1,78 +1,10 @@
-/* Toolbar popup. "Brass key on blued steel": the steel header names the site
-   in the active tab and what will happen there; everything below stays quiet.
-   Brass is reserved for the key mark and keyboard focus. The options page
-   uses style.css instead. */
+/* Toolbar popup layout. Tokens and controls come from theme.css; here the
+   steel band names the site in the active tab and what will happen there,
+   and everything below stays quiet. */
 
-:root {
-  --steel: #1f2b3b;
-  --steel-text: #c7d1dd;
-  --brass: #c9a23a;
-  --paper: #f6f7f9;
-  --field: #ffffff;
-  --ink: #18202b;
-  --slate: #5c6777;
-  --rule: #dfe4ea;
-  --field-border: #c6ced8;
-  --verdigris: #2e7d62;
-  --verdigris-on-steel: #63c39d;
-  --signal: #b3261e;
-  --primary-bg: var(--steel);
-  --primary-text: #ffffff;
-  --warning-bg: #f6eed6;
-  --warning-text: #5e4a12;
+body { width: 300px; }
 
-  --ui: "Avenir Next", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --steel: #24344a;
-    --paper: #151c26;
-    --field: #1c2531;
-    --ink: #e6eaf0;
-    --slate: #9aa5b4;
-    --rule: #2b3646;
-    --field-border: #3a4759;
-    --verdigris: #63c39d;
-    --signal: #f08a80;
-    --primary-bg: #e6eaf0;
-    --primary-text: #151c26;
-    --warning-bg: #3a3220;
-    --warning-text: #ecd9a2;
-  }
-}
-
-* { box-sizing: border-box; }
-
-body {
-  width: 300px;
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: 13px/1.4 var(--ui);
-}
-
-/* The site header: the one bold element. */
-.site {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 14px 16px 12px;
-  border-bottom: 2px solid var(--brass);
-  background: var(--steel);
-  color: var(--steel-text);
-}
-
-.site-key {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  margin-top: 1px;
-  color: var(--brass);
-}
-
-.site-text { min-width: 0; }
+.site { padding: 14px 16px 12px; }
 
 .site-host {
   margin: 0;
@@ -84,37 +16,6 @@ body {
 .site[data-state="idle"] .site-host {
   color: var(--steel-text);
   font: 500 15px/1.25 var(--ui);
-}
-
-.site-state {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin: 4px 0 0;
-  font-size: 12.5px;
-}
-
-.dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.5px solid currentColor;
-}
-
-/* Filled = something will happen; hollow = nothing will. */
-.site[data-state="answer"] .dot { background: var(--verdigris-on-steel); border-color: var(--verdigris-on-steel); }
-.site[data-state="locked"] .dot,
-.site[data-state="new"] .dot { border-color: var(--brass); }
-.site[data-state="none"] .dot,
-.site[data-state="idle"] .dot { opacity: 0.6; }
-
-.warning {
-  margin: 0;
-  padding: 8px 16px;
-  background: var(--warning-bg);
-  color: var(--warning-text);
-  font-size: 12px;
 }
 
 main { padding: 14px 16px 4px; }
@@ -131,100 +32,7 @@ h1 {
   font-size: 12.5px;
 }
 
-label {
-  display: block;
-  margin: 0 0 4px;
-  color: var(--slate);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-input {
-  display: block;
-  width: 100%;
-  height: 30px;
-  margin: 0 0 12px;
-  padding: 0 8px;
-  border: 1px solid var(--field-border);
-  border-radius: 6px;
-  background: var(--field);
-  color: var(--ink);
-  font: 13px var(--ui);
-}
-
-#host,
-#username { font-family: var(--mono); font-size: 12.5px; }
-
-.input-row {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.input-row input {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-}
-
-button {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: none;
-  color: var(--ink);
-  font: 600 13px var(--ui);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-button.primary {
-  background: var(--primary-bg);
-  color: var(--primary-text);
-}
-
-button.primary:hover { filter: brightness(1.15); }
-
-button.quiet {
-  border-color: var(--field-border);
-  font-weight: 500;
-}
-
-button.quiet:hover { background: var(--field); }
-
-button.danger {
-  padding: 0 4px;
-  color: var(--signal);
-  font-weight: 500;
-}
-
-button.danger:hover { text-decoration: underline; }
-
-/* Brass focus ring for everything interactive. */
-input:focus-visible,
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--brass);
-  outline-offset: 1px;
-}
-
-input:focus { border-color: var(--brass); }
-
-.actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-#status {
-  min-height: 18px;
-  margin: 10px 0 0;
-  color: var(--verdigris);
-  font-size: 12px;
-}
-
-#status.error { color: var(--signal); }
+#status { margin: 10px 0 0; }
 
 footer {
   display: flex;
@@ -244,5 +52,3 @@ footer a {
 footer a:hover { text-decoration: underline; }
 
 footer button { height: 26px; font-size: 12.5px; }
-
-[hidden] { display: none !important; }

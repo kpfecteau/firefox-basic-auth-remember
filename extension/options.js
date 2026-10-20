@@ -1,9 +1,9 @@
-// Options page ("Manage all…"). Shows one of three sections depending on the
-// vault state:
+// Options page ("Manage all logins"). The steel band at the top names the vault
+// and its state; below it, one of three sections depending on that state:
 //   #setup     no passphrase yet ("new"): choose one, migrating old logins
 //   #locked    "locked": unlock, or reset if the passphrase is forgotten
-//   #unlocked  "unlocked": list/add/edit/delete credentials, test which
-//              pattern matches a host, change the passphrase, lock
+//   #unlocked  "unlocked": list/add/edit/delete logins, test which pattern
+//              matches a host, change the passphrase (Lock now is in the band)
 // All credential reads and writes go to the background via vault() (store.js).
 // The page re-renders whenever the background broadcasts "stateChanged", so
 // changes made from the popup show up here too.
@@ -40,43 +40,51 @@ function handle(fn) {
     try {
       await fn(e);
     } catch (err) {
-      setStatus(err.message, true);
+      setStatus(`${err.message}.`, true);
       render();
     }
   };
 }
 
 /**
- * Re-draws the page for the current vault state: shows the matching section,
- * the migration note when old plaintext logins exist, and the credential
- * table when unlocked. Also disarms the reset button, so it always needs two
- * clicks after being shown again.
+ * Re-draws the page for the current vault state: the band's state line, the
+ * matching section, the migration note when old plaintext logins exist, and
+ * the logins table when unlocked. Also disarms the reset button, so it always
+ * needs two clicks after being shown again.
  *
  * @returns {Promise<void>}
  */
 async function render() {
   const reset = $("reset");
   delete reset.dataset.armed;
-  reset.textContent = "Delete all saved credentials";
+  reset.textContent = "Delete all saved logins";
 
   const { state, legacyCount } = await vault("status");
   $("setup").hidden = state !== "new";
   $("locked").hidden = state !== "locked";
   $("unlocked").hidden = state !== "unlocked";
+  $("lock").hidden = state !== "unlocked";
 
   if (state === "new" && legacyCount) {
     $("legacy-note").textContent = `Your ${legacyCount} existing saved login(s) will be encrypted.`;
     $("legacy-note").hidden = false;
   }
-  if (state === "unlocked") await renderRows();
+
+  let stateText = state === "new" ? "No passphrase yet" : "Locked";
+  if (state === "unlocked") {
+    const count = await renderRows();
+    stateText = `Unlocked, ${count} saved ${count === 1 ? "login" : "logins"}`;
+  }
+  $("vault").dataset.state = state;
+  $("vault-state").textContent = stateText;
 }
 
 /**
- * Re-builds the credential table, sorted by pattern, with Edit (copy the row
- * into the form) and Delete buttons per row. Passwords are never shown in the
+ * Re-builds the logins table, sorted by pattern, with Edit (copy the row into
+ * the form) and Delete buttons per row. Passwords are never shown in the
  * table; Edit puts them into the (masked) password field.
  *
- * @returns {Promise<void>}
+ * @returns {Promise<number>} How many logins are saved.
  * @throws {Error} "Vault is locked" if called while locked.
  */
 async function renderRows() {
@@ -89,14 +97,19 @@ async function renderRows() {
     const tr = rows.insertRow();
     const td = tr.insertCell();
     td.colSpan = 3;
-    td.textContent = "No saved credentials.";
-    return;
+    td.className = "empty";
+    td.textContent = "No saved logins yet. Add one below, or open the toolbar popup on a site.";
+    return 0;
   }
 
   for (const key of keys) {
     const tr = rows.insertRow();
-    tr.insertCell().textContent = key;
-    tr.insertCell().textContent = all[key].username;
+    const patternCell = tr.insertCell();
+    patternCell.className = "literal";
+    patternCell.textContent = key;
+    const userCell = tr.insertCell();
+    userCell.className = "literal";
+    userCell.textContent = all[key].username;
 
     const edit = document.createElement("button");
     edit.textContent = "Edit";
@@ -104,14 +117,23 @@ async function renderRows() {
       $("host").value = key;
       $("username").value = all[key].username;
       $("password").value = all[key].password;
+      $("password").focus();
+      $("form").scrollIntoView({ block: "nearest" });
     });
 
     const del = document.createElement("button");
+    del.className = "danger";
     del.textContent = "Delete";
-    del.addEventListener("click", handle(() => vault("delete", { pattern: key })));
+    del.addEventListener("click", handle(async () => {
+      await vault("delete", { pattern: key });
+      setStatus(`Deleted the login for ${key}.`);
+    }));
 
-    tr.insertCell().append(edit, " ", del);
+    const actions = tr.insertCell();
+    actions.className = "row-actions";
+    actions.append(edit, del);
   }
+  return keys.length;
 }
 
 // Changes re-render via the background's "stateChanged" message (below), so
@@ -121,12 +143,12 @@ async function renderRows() {
 $("setup-form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   if ($("setup-pass").value !== $("setup-confirm").value) {
-    setStatus("Passphrases don't match.", true);
+    setStatus("The passphrases don't match.", true);
     return;
   }
   await vault("setup", { passphrase: $("setup-pass").value });
   e.target.reset();
-  setStatus("Vault created and unlocked.");
+  setStatus("Encrypted and unlocked.");
 }));
 
 // Unlock form; a wrong passphrase surfaces through handle().
@@ -137,7 +159,7 @@ $("unlock-form").addEventListener("submit", handle(async (e) => {
   setStatus("Unlocked.");
 }));
 
-// "Lock now" button.
+// "Lock now" button in the band.
 $("lock").addEventListener("click", handle(async () => {
   await vault("lock");
   setStatus("Locked.");
@@ -152,7 +174,7 @@ $("reset").addEventListener("click", handle(async (e) => {
     return;
   }
   await vault("reset");
-  setStatus("All saved credentials deleted. Set a new passphrase.");
+  setStatus("Deleted all saved logins. Choose a new passphrase to start again.");
 }));
 
 // Add/update form: normalizes the host pattern, rejects an invalid /regex/,
@@ -161,27 +183,27 @@ $("form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   const pattern = normalizePattern($("host").value);
   if (!isValidPattern(pattern)) {
-    setStatus("Invalid regular expression.", true);
+    setStatus("That regular expression isn't valid.", true);
     return;
   }
   await vault("save", { pattern, username: $("username").value, password: $("password").value });
-  setStatus("");
+  setStatus(`Saved the login for ${pattern}.`);
   e.target.reset();
 }));
 
-// "Current host" button: fills the form from the most recently viewed website
+// "Recent site" button: fills the form from the most recently viewed website
 // tab (this page is itself the active tab, so it can't use that).
 $("use-current").addEventListener("click", handle(async () => {
   const key = await currentSiteHostKey();
   if (!key) {
-    setStatus("No website tab found.", true);
+    setStatus("There's no website open to take the host from.", true);
     return;
   }
   const cred = (await vault("list"))[key];
   $("host").value = key;
   $("username").value = cred ? cred.username : "";
   $("password").value = cred ? cred.password : "";
-  setStatus(cred ? "Saved credentials found." : "");
+  setStatus(cred ? `Loaded the saved login for ${key}.` : "");
 }));
 
 // "Test a host": shows which saved pattern would answer for host[:port],
@@ -192,15 +214,15 @@ $("test-form").addEventListener("submit", handle(async (e) => {
   const [host, port] = $("test-host").value.trim().split(":");
   const match = findCredential(await vault("list"), host, port, "http");
   $("test-result").textContent = match
-    ? `Matches ${match.pattern} → ${match.username}`
-    : "No saved credentials match.";
+    ? `Uses ${match.pattern}, signing in as ${match.username}.`
+    : "No saved login matches this host.";
 }));
 
 // Change passphrase form; a wrong current passphrase surfaces through handle().
 $("change-form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   if ($("change-next").value !== $("change-confirm").value) {
-    setStatus("New passphrases don't match.", true);
+    setStatus("The new passphrases don't match.", true);
     return;
   }
   await vault("changePassphrase", { current: $("change-current").value, next: $("change-next").value });

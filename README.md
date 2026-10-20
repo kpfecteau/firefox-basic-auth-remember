@@ -40,7 +40,7 @@ For quick hacking instead, use `about:debugging` → This Firefox →
   says what will happen there ("Signs in as …", "No saved login for this
   site", or "Locked"). The host is pre-filled; enter the username/password
   and **Save login**, then reload the page.
-- **This site** in the popup (**Current host** on the options page) fills the
+- **This site** in the popup (**Recent site** on the options page) fills the
   host field from the current tab, or on the options page the most recently
   viewed website tab. Edit it into a pattern (e.g. `*.example.com`) before
   saving if you like.
@@ -111,7 +111,7 @@ Saved logins are encrypted with a passphrase you choose:
   keeps its own HTTP-auth session cache, which extensions can't clear, so
   those sites stay signed in until Firefox restarts.
 - A forgotten passphrase can't be recovered: **Delete all saved
-  credentials** on the options page's locked screen wipes the vault so you
+  logins** on the options page's locked screen wipes the vault so you
   can start over.
 - Upgrading from 1.2.x: the first time you set a passphrase, your existing
   plaintext logins are encrypted and the plaintext copy is deleted.
