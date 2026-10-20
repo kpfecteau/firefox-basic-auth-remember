@@ -37,7 +37,7 @@ placeholder values (template: `.env.amo.example`). The JWT issuer goes in
 
 ```sh
 npm run sign:unlisted   # signed .xpi for self-distribution, not listed in the store
-npm run sign:listed     # public listing; goes through review
+npm run sign:listed     # public listing; submits for review and exits (doesn't wait)
 ```
 
 `tools/sign.js` loads `.env.amo`, refuses to run while the values are still
@@ -54,7 +54,13 @@ How `.env.amo` is protected:
   in your password manager or the macOS Keychain and export it in the shell
   you sign from instead.
 
-Signed files land in `web-ext-artifacts/` (gitignored).
+Signed files land in `web-ext-artifacts/` (gitignored). Unlisted versions are
+approved automatically within a minute or two, so `sign:unlisted` waits and
+downloads the signed file. Listed versions wait for Mozilla's review (hours to
+days), so `sign:listed` passes `--approval-timeout=0`: it submits, prints the
+add-on's Developer Hub page and exits; download the signed file there once
+it's approved. Don't re-run it for the same version: AMO rejects a version
+number it has already received, and each attempt counts against the rate limit.
 
 ## Screenshots
 
