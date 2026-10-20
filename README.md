@@ -72,6 +72,7 @@ Console. Every challenge logs either the matching pattern or
 
 ```sh
 node --test test/*.test.js      # pattern matching and encryption unit tests
+test/e2e/run.sh                 # headless Firefox: vault, lock, redirects, badges
 node test/server.js              # http://localhost:8765, user / secret
 ```
 
@@ -92,6 +93,9 @@ Saved logins are encrypted with a passphrase you choose:
   login dialog.
 - **Lock** in the popup or **Lock now** on the options page clears them
   from memory. **Change passphrase** is on the options page.
+- Locking doesn't sign you out of sites you've already visited: Firefox
+  keeps its own HTTP-auth session cache, which extensions can't clear, so
+  those sites stay signed in until Firefox restarts.
 - A forgotten passphrase can't be recovered: **Delete all saved
   credentials** on the options page's locked screen wipes the vault so you
   can start over.

@@ -3,18 +3,36 @@
 // request), we fall through to Firefox's normal login dialog instead of
 // looping. While the vault is locked, every challenge falls through.
 
-const answered = new Set();
+// requestId -> Set of "host:port" challengers already answered for it. Keyed by
+// challenger too because a request keeps its id across redirects, and the
+// redirect target may challenge with its own (different) saved credentials.
+const answered = new Map();
 
 // Set while unlocked; cleared by lock() and on browser restart.
 let vaultKey = null;
 let credentials = null;
 
+// tabId -> { text, color }. Firefox clears a tab's badge when its page
+// navigates, which happens after the auth challenge, so we re-apply it once
+// the tab finishes loading.
+const pendingBadges = new Map();
+
 function setBadge(tabId, text, color) {
   const target = tabId === undefined ? {} : { tabId };
   if (tabId !== undefined && tabId < 0) return;
+  if (tabId !== undefined) pendingBadges.set(tabId, { text, color });
   browser.browserAction.setBadgeText({ ...target, text }).catch(() => {});
   browser.browserAction.setBadgeBackgroundColor({ ...target, color }).catch(() => {});
 }
+
+browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status !== "complete" || !pendingBadges.has(tabId)) return;
+  const { text, color } = pendingBadges.get(tabId);
+  pendingBadges.delete(tabId);
+  browser.browserAction.setBadgeText({ tabId, text }).catch(() => {});
+  browser.browserAction.setBadgeBackgroundColor({ tabId, color }).catch(() => {});
+});
+browser.tabs.onRemoved.addListener((tabId) => pendingBadges.delete(tabId));
 
 function updateLockBadge() {
   setBadge(undefined, vaultKey ? "" : "🔒", "#666");
@@ -34,13 +52,23 @@ async function persist() {
   await browser.storage.local.set({ [VAULT_KEY]: { ...record, ...encrypted } });
 }
 
+// Tells open extension pages (e.g. the options page) to re-render.
+function notifyChanged() {
+  browser.runtime.sendMessage({ type: "stateChanged" }).catch(() => {});
+}
+
 function requireUnlocked() {
   if (!vaultKey) throw new Error("Vault is locked");
 }
 
-function lock() {
+async function lock() {
   vaultKey = null;
   credentials = null;
+  pendingBadges.clear();
+  // Per-tab ✓/✗ badges take precedence over the global 🔒, so clear them.
+  for (const tab of await browser.tabs.query({})) {
+    browser.browserAction.setBadgeText({ tabId: tab.id, text: null }).catch(() => {});
+  }
   updateLockBadge();
 }
 
@@ -74,7 +102,7 @@ const handlers = {
   },
 
   async lock() {
-    lock();
+    await lock();
   },
 
   async list() {
@@ -106,20 +134,29 @@ const handlers = {
   // For a forgotten passphrase: deletes every saved credential.
   async reset() {
     await browser.storage.local.remove([VAULT_KEY, LEGACY_KEY]);
-    lock();
+    await lock();
   },
 };
 
+// Handlers that change what an open page would show.
+const MUTATING = new Set(["setup", "unlock", "lock", "save", "delete", "reset"]);
+
 browser.runtime.onMessage.addListener((message) => {
   const handler = handlers[message.type];
-  return handler ? handler(message) : undefined;
+  if (!handler) return undefined;
+  const result = handler(message);
+  if (MUTATING.has(message.type)) result.then(notifyChanged, () => {});
+  return result;
 });
 
 browser.webRequest.onAuthRequired.addListener(
   (details) => {
     if (details.isProxy) return {};
-    if (answered.has(details.requestId)) {
-      answered.delete(details.requestId);
+    const { host, port } = details.challenger;
+    const challenger = `${host}:${port}`;
+    const seen = answered.get(details.requestId);
+    if (seen && seen.has(challenger)) {
+      seen.delete(challenger);
       console.warn("Saved credentials rejected:", details.url);
       setBadge(details.tabId, "✗", "#c33");
       return {};
@@ -129,7 +166,6 @@ browser.webRequest.onAuthRequired.addListener(
       return {};
     }
 
-    const { host, port } = details.challenger;
     const scheme = new URL(details.url).protocol.replace(":", "");
     const cred = findCredential(credentials, host, port, scheme);
     if (!cred) {
@@ -138,7 +174,8 @@ browser.webRequest.onAuthRequired.addListener(
     }
 
     console.info(`Supplying credentials (${cred.pattern}) for`, details.url);
-    answered.add(details.requestId);
+    if (!seen) answered.set(details.requestId, new Set([challenger]));
+    else seen.add(challenger);
     setBadge(details.tabId, "✓", "#2a7");
     return {
       authCredentials: { username: cred.username, password: cred.password },
