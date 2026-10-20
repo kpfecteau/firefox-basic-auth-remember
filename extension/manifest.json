@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Basic Auth Remember",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Signs in to HTTP Basic auth sites for you with logins saved per host pattern, encrypted under your passphrase.",
   "icons": {
     "48": "icons/icon-48.png",

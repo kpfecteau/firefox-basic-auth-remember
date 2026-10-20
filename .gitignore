@@ -1,4 +1,6 @@
 web-ext-artifacts/
+# web-ext sign's record of the last AMO upload (per machine)
+extension/.amo-upload-uuid
 *.xpi
 .DS_Store
 tmp/
