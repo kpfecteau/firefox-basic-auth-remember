@@ -161,6 +161,11 @@ Saved logins are encrypted with a passphrase you choose:
 While unlocked, anything that can inspect Firefox's memory or the extension's
 background page (`about:debugging` → Inspect) can see the logins.
 
+## Future work
+
+Planned ideas (auto-lock, encrypted backups, private-window testing and more)
+are listed in [FUTURE_WORK.md](FUTURE_WORK.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
