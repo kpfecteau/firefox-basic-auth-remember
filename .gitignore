@@ -2,3 +2,6 @@ web-ext-artifacts/
 *.xpi
 .DS_Store
 tmp/
+
+# AMO API credentials (template: .env.amo.example). Never commit.
+.env.amo

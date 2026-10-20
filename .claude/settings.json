@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env.amo)",
+      "Read(**/.env.amo)",
+      "Edit(./.env.amo)",
+      "Edit(**/.env.amo)"
+    ]
+  }
+}

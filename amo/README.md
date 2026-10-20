@@ -37,14 +37,28 @@ the extension.
 ## Signing
 
 Create API credentials at https://addons.mozilla.org/developers/addon/api/key/
-and export them; web-ext reads them from the environment:
+and put them in `.env.amo` at the repo root. It already exists with
+placeholder values (template: `.env.amo.example`). The JWT issuer goes in
+`WEB_EXT_API_KEY` and the JWT secret in `WEB_EXT_API_SECRET`.
 
 ```sh
-export WEB_EXT_API_KEY=user:12345:67
-export WEB_EXT_API_SECRET=...        # never commit this
 npm run sign:unlisted   # signed .xpi for self-distribution, not listed in the store
 npm run sign:listed     # public listing; goes through review
 ```
+
+`tools/sign.js` loads `.env.amo`, refuses to run while the values are still
+placeholders, and never prints them. Variables already exported in your shell
+take precedence over the file.
+
+How `.env.amo` is protected:
+
+- It's in `.gitignore`, so git won't commit it (`git status --ignored` lists it).
+- `.claude/settings.json` denies Claude Code's Read and Edit tools on it, and
+  those deny rules also apply to shell commands Claude runs in its sandbox.
+- These are guardrails for Claude Code and git, not encryption: any program
+  running as you can read the file. For stronger protection keep the secret
+  in your password manager or the macOS Keychain and export it in the shell
+  you sign from instead.
 
 Signed files land in `web-ext-artifacts/` (gitignored). Screenshots for the
 listing are uploaded by hand on AMO.
