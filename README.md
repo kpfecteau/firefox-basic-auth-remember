@@ -17,9 +17,9 @@ only applies to proxies). This extension answers the challenge for you.
 
 1. In `about:config`, set `xpinstall.signatures.required` to `false`
    (only honored in Developer Edition / Nightly).
-2. Build the package:
+2. Build the package (needs Node.js; works on macOS, Linux and Windows):
    ```sh
-   ./build.sh
+   npm run build      # or ./build.sh on macOS/Linux
    ```
 3. In `about:addons` → gear icon → **Install Add-on From File…** → pick
    `basic-auth-remember.xpi`.
@@ -27,7 +27,7 @@ only applies to proxies). This extension answers the challenge for you.
    **Run in Private Windows** to **Allow**. Firefox never lets an extension see
    private-window traffic without this, and no manifest setting can grant it.
    The popup and options page show a warning while it's off.
-5. Re-run `./build.sh` and reinstall after changing code.
+5. Re-run `npm run build` and reinstall after changing code.
 
 For quick hacking instead, use `about:debugging` → This Firefox →
 **Load Temporary Add-on…** → `extension/manifest.json` (removed on restart).
@@ -86,10 +86,16 @@ Console. Every challenge logs either the matching pattern or
 ## Testing
 
 ```sh
-node --test test/*.test.js      # pattern matching and encryption unit tests
-test/e2e/run.sh                 # headless Firefox end-to-end (about 15 seconds)
-node test/server.js              # http://localhost:8765, user / secret
+npm test                        # unit tests: pattern matching, encryption, markup
+npm run lint                    # Mozilla's web-ext linter
+npm run e2e                     # headless Firefox end-to-end (about 15 seconds)
+node test/server.js             # http://localhost:8765, user / secret
 ```
+
+`npm test`, `npm run build` and `npm run lint` work on macOS, Linux and
+Windows. The end-to-end suite is a POSIX shell script: run it on macOS or
+Linux, or under WSL on Windows. It finds Firefox Developer Edition's default
+install on each OS; set `FIREFOX=/path/to/firefox` to use another one.
 
 - **Unit tests** cover host-pattern matching and the other `store.js`
   helpers, and the encryption in `vault.js`.

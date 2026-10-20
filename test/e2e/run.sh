@@ -3,11 +3,14 @@
 # appends background-steps.js, adds the e2e pages (page.js, and the options
 # page driven by options-steps.js), and reports each step.
 #   test/e2e/run.sh
-# Override the browser with FIREFOX=/path/to/firefox.
+# FIREFOX defaults to web-ext's "firefoxdeveloperedition" alias, which finds
+# Developer Edition's default install on macOS, Linux and Windows; set
+# FIREFOX=/path/to/firefox to use another binary. On Windows, run this under
+# WSL: Git Bash lacks pkill, so Firefox may be left running after the run.
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-FIREFOX=${FIREFOX:-"/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox"}
+FIREFOX=${FIREFOX:-firefoxdeveloperedition}
 WORK=$(mktemp -d)
 EXT="$WORK/ext"
 LOG="$WORK/firefox.log"
@@ -35,7 +38,9 @@ while [ $i -lt 240 ] && ! grep -q "E2E DONE" "$LOG"; do
   i=$((i + 1))
 done
 kill $RUNNER $SERVER 2> /dev/null
-pkill -f "web-ext@8 run" 2> /dev/null
+# web-ext runs under npx, so killing $RUNNER can leave web-ext (and its
+# Firefox) behind; stop it by name where pkill exists.
+if command -v pkill > /dev/null; then pkill -f "web-ext@8 run" 2> /dev/null; fi
 
 if ! grep -q "E2E DONE" "$LOG"; then
   grep -oE "E2E [a-z-]+ (PASS|FAIL).*" "$LOG"

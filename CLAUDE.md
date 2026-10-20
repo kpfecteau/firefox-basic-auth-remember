@@ -2,22 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-A local, unsigned Firefox (Developer Edition) WebExtension, Manifest V2, that answers HTTP Basic/Digest auth challenges with saved logins so the browser's login dialog never appears. Logins are keyed by host pattern and stored encrypted under a passphrase the user unlocks once per Firefox session. There is no bundler, package.json or npm dependency: the `extension/` folder is the shipped extension as-is.
+A local, unsigned Firefox (Developer Edition) WebExtension, Manifest V2, that answers HTTP Basic/Digest auth challenges with saved logins so the browser's login dialog never appears. Logins are keyed by host pattern and stored encrypted under a passphrase the user unlocks once per Firefox session. There is no bundler or npm dependency: `package.json` only holds scripts, and the `extension/` folder is the shipped extension as-is.
 
 ## Commands
 
 ```sh
-./build.sh                                  # zip extension/ into basic-auth-remember.xpi (gitignored)
-npx -y web-ext@8 lint -s extension          # Mozilla's extension linter
-node --test test/*.test.js                  # unit tests (Node's built-in runner)
+npm run build                               # web-ext build → basic-auth-remember.xpi (gitignored); ./build.sh is the same
+npm run lint                                # Mozilla's extension linter (web-ext lint)
+npm test                                    # unit tests (Node's built-in runner, files listed explicitly)
 node --test --test-name-pattern "regex" test/match.test.js   # a single unit test by name
-test/e2e/run.sh                             # headless Firefox end-to-end suite (~15s)
+npm run e2e                                 # headless Firefox end-to-end suite (~15s), i.e. sh test/e2e/run.sh
 node test/server.js                         # local Basic-auth server on :8765 (user / secret)
 ```
 
-- Don't run `node --test test/`: it also picks up `test/server.js`, which never exits.
-- `test/e2e/run.sh` needs Firefox Developer Edition at the default macOS path (override with `FIREFOX=...`). It copies `extension/` to a temp dir, appends `test/e2e/background-steps.js` to the copy's `background.js`, adds two test pages, runs it with `web-ext run`, and greps `E2E <step> PASS|FAIL` lines from Firefox's stdout (`dump()`). Individual e2e steps can't be run on their own; it exits non-zero on any FAIL or a timeout.
-- The user installs the extension by reinstalling the rebuilt `.xpi` from `about:addons` (needs `xpinstall.signatures.required = false`). After behavior changes, rebuild with `./build.sh`.
+- Don't run `node --test test/`: it also picks up `test/server.js` (never exits) and the e2e browser scripts. When adding a unit test file, add it to the `test` script in `package.json` (an explicit list, because Windows shells don't expand `test/*.test.js`).
+- Build, lint and unit tests are cross-platform. The e2e suite is POSIX sh (macOS, Linux, or WSL on Windows); `.gitattributes` keeps `*.sh` at LF endings for that.
+- `test/e2e/run.sh` finds Firefox Developer Edition via web-ext's `firefoxdeveloperedition` alias (default install path on each OS; override with `FIREFOX=...`). It copies `extension/` to a temp dir, appends `test/e2e/background-steps.js` to the copy's `background.js`, adds two test pages, runs it with `web-ext run`, and greps `E2E <step> PASS|FAIL` lines from Firefox's stdout (`dump()`). Individual e2e steps can't be run on their own; it exits non-zero on any FAIL or a timeout.
+- The user installs the extension by reinstalling the rebuilt `.xpi` from `about:addons` (needs `xpinstall.signatures.required = false`). After behavior changes, rebuild with `npm run build`.
 
 ## Architecture
 
