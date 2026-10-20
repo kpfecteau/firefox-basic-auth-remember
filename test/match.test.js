@@ -24,6 +24,12 @@ test("exact host and default port", () => {
   assert.strictEqual(who("EXAMPLE.com", 443), "exact");
 });
 
+test("default port reported as -1 or empty", () => {
+  assert.strictEqual(who("example.com", -1), "exact");
+  assert.strictEqual(who("example.com", ""), "exact");
+  assert.strictEqual(who("www.example.com", -1), "wild");
+});
+
 test("exact host:port", () => {
   assert.strictEqual(who("localhost", 8080, "http"), "port");
   assert.strictEqual(who("localhost", 80, "http"), null);

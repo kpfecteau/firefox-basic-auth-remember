@@ -10,10 +10,12 @@
 
 const STORAGE_KEY = "credentials";
 
+// Firefox reports the challenger port as -1 when the URL uses the default port.
 function hostKey(host, port, scheme) {
   host = String(host || "").toLowerCase();
   const defaultPort = scheme === "https" ? 443 : 80;
-  return port && Number(port) !== defaultPort ? `${host}:${port}` : host;
+  port = Number(port);
+  return port > 0 && port !== defaultPort ? `${host}:${port}` : host;
 }
 
 function hostKeyFromUrl(url) {

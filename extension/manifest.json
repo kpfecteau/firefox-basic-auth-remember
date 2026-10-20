@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Basic Auth Remember",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Remembers HTTP Basic auth credentials per host pattern and supplies them automatically.",
   "browser_specific_settings": {
     "gecko": {
