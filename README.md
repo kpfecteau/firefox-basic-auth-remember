@@ -1,5 +1,8 @@
 # Basic Auth Remember
 
+<!-- Replace OWNER with the GitHub user or organization once the repo exists. -->
+[![CI](https://github.com/OWNER/firefox-basic-auth-remember/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/firefox-basic-auth-remember/actions/workflows/ci.yml)
+
 A local Firefox extension that remembers HTTP Basic (and Digest) auth
 credentials per host and supplies them automatically, so the login dialog
 never appears for saved sites. Saved logins are encrypted with a passphrase
@@ -112,13 +115,26 @@ Manually: save `localhost:8765` → `user` / `secret` in the popup and reload: t
 shows "Authenticated!" with no dialog. Save a wrong password: the native
 dialog appears once.
 
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `main` or `master` and on pull
+requests:
+
+- unit tests (`npm test`) on Ubuntu, macOS and Windows;
+- `npm run lint -- --warnings-as-errors` and `npm run build`, keeping the
+  built `.xpi` as a downloadable artifact on the run;
+- the end-to-end suite against the latest Firefox Developer Edition on Ubuntu.
+
+The badge at the top of this README shows the result for the default branch.
+
 ## Publishing
 
 The extension is set up for addons.mozilla.org: it declares that it collects
 no data, has icons, and has listing text and reviewer notes in
 `amo/metadata.json`. See [`amo/README.md`](amo/README.md) for what to decide
 before the first upload (support contact, add-on id) and how to sign with
-`npm run sign:unlisted` or `npm run sign:listed`. A signed build installs in
+`npm run sign:unlisted` or `npm run sign:listed`. Store screenshots are in
+`amo/screenshots/` (regenerate with `npm run screenshots`). A signed build installs in
 regular Firefox without the `xpinstall.signatures.required` change.
 
 ## Encryption

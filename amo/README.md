@@ -8,6 +8,18 @@ the extension.
   new listed submission. The format is AMO's add-on API (v5) create payload.
 - `icon-128.png`: the listing icon, uploaded on the add-on's "Edit Product
   Page" screen. Generated with the extension's icons by `npm run icons`.
+- `screenshots/`: 1280x800 listing screenshots of the real popup and options
+  page with example.com data, uploaded by hand on the same screen.
+  Regenerate them after UI changes with `npm run screenshots` (headless
+  Firefox; `tools/screenshots/`). Suggested captions:
+
+  | File | Caption |
+  | --- | --- |
+  | `1-popup-signs-in.png` | The popup shows the site you're on and who it signs in as. |
+  | `2-popup-locked.png` | Logins stay encrypted until you unlock once per Firefox session. |
+  | `3-options-logins.png` | Manage every saved login: exact hosts, wildcards and regular expressions. |
+  | `4-options-edit-and-test.png` | Edit a login in place, and test which saved login a host would use. |
+  | `5-popup-dark.png` | Follows your light or dark system theme. |
 
 ## Before the first submission
 

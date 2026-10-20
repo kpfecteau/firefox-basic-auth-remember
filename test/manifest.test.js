@@ -54,6 +54,15 @@ test("listing icon for AMO is 128x128", () => {
   assert.deepStrictEqual(pngSize(path.join(__dirname, "../amo/icon-128.png")), { width: 128, height: 128 });
 });
 
+test("AMO screenshots are 1280x800 (npm run screenshots)", () => {
+  const dir = path.join(__dirname, "../amo/screenshots");
+  const shots = fs.readdirSync(dir).filter((f) => f.endsWith(".png"));
+  assert.ok(shots.length >= 3, "expected at least 3 screenshots");
+  for (const shot of shots) {
+    assert.deepStrictEqual(pngSize(path.join(dir, shot)), { width: 1280, height: 800 }, shot);
+  }
+});
+
 test("AMO listing metadata is valid and names a license", () => {
   const meta = JSON.parse(fs.readFileSync(path.join(__dirname, "../amo/metadata.json"), "utf8"));
   assert.ok(meta.summary["en-US"].length <= 250, "summary over AMO's 250-character limit");

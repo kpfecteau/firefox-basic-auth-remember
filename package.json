@@ -9,6 +9,7 @@
     "test": "node --test test/match.test.js test/vault.test.js test/html.test.js test/manifest.test.js",
     "e2e": "sh test/e2e/run.sh",
     "icons": "python3 tools/make_icons.py",
+    "screenshots": "sh tools/screenshots/run.sh",
     "sign:unlisted": "npx -y web-ext@8 sign -s extension -a web-ext-artifacts --channel=unlisted",
     "sign:listed": "npx -y web-ext@8 sign -s extension -a web-ext-artifacts --channel=listed --amo-metadata amo/metadata.json"
   }

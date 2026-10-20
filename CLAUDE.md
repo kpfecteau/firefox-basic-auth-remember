@@ -14,6 +14,7 @@ node --test --test-name-pattern "regex" test/match.test.js   # a single unit tes
 npm run e2e                                 # headless Firefox end-to-end suite (~15s), i.e. sh test/e2e/run.sh
 node test/server.js                         # local Basic-auth server on :8765 (user / secret)
 npm run icons                               # regenerate PNG icons (needs Pillow) from tools/make_icons.py
+npm run screenshots                         # regenerate amo/screenshots/*.png (headless Firefox, fake example.com data)
 npm run sign:unlisted / sign:listed         # AMO signing via web-ext; needs WEB_EXT_API_KEY/SECRET in the env
 ```
 
@@ -23,6 +24,9 @@ npm run sign:unlisted / sign:listed         # AMO signing via web-ext; needs WEB
 - The user installs the extension by reinstalling the rebuilt `.xpi` from `about:addons` (needs `xpinstall.signatures.required = false`). After behavior changes, rebuild with `npm run build`.
 
 - Store submission lives in `amo/` (`metadata.json` = AMO v5 create payload incl. reviewer notes; `icon-128.png`); see `amo/README.md`. Bump `version` in `extension/manifest.json` for every upload. Keep the gecko id `basic-auth-remember@local`: saved logins are stored under it, so changing it empties users' vaults. `test/manifest.test.js` checks icons, the id and the data-collection declaration.
+
+- After UI changes to the popup or options page, regenerate the store screenshots (`npm run screenshots`). `tools/screenshots/run.sh` copies `extension/`, injects `shim.js` (fake `browser` + data) and `stage.js`/`stage.css` (popup scaled into a 1280x800 frame with a caption) or `drive.js` (options-page interactions), and uses `firefox --screenshot`; drivers must use promises, not timers, so they finish before the capture.
+- CI is `.github/workflows/ci.yml` (push to main/master, PRs): unit tests on ubuntu/macos/windows, lint with `--warnings-as-errors` + build (xpi artifact), and the e2e suite on ubuntu with Firefox Developer Edition from `browser-actions/setup-firefox` (`FIREFOX` = its `firefox-path` output). The README badge URL has an `OWNER` placeholder until the GitHub repo exists.
 
 ## Architecture
 
