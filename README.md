@@ -86,7 +86,7 @@ Console. Every challenge logs either the matching pattern or
 ## Testing
 
 ```sh
-npm test                        # unit tests: pattern matching, encryption, markup
+npm test                        # unit tests: pattern matching, encryption, markup, manifest
 npm run lint                    # Mozilla's web-ext linter
 npm run e2e                     # headless Firefox end-to-end (about 15 seconds)
 node test/server.js             # http://localhost:8765, user / secret
@@ -111,6 +111,15 @@ install on each OS; set `FIREFOX=/path/to/firefox` to use another one.
 Manually: save `localhost:8765` → `user` / `secret` in the popup and reload: the page
 shows "Authenticated!" with no dialog. Save a wrong password: the native
 dialog appears once.
+
+## Publishing
+
+The extension is set up for addons.mozilla.org: it declares that it collects
+no data, has icons, and has listing text and reviewer notes in
+`amo/metadata.json`. See [`amo/README.md`](amo/README.md) for what to decide
+before the first upload (license, support contact) and how to sign with
+`npm run sign:unlisted` or `npm run sign:listed`. A signed build installs in
+regular Firefox without the `xpinstall.signatures.required` change.
 
 ## Encryption
 

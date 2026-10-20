@@ -13,12 +13,16 @@ npm test                                    # unit tests (Node's built-in runner
 node --test --test-name-pattern "regex" test/match.test.js   # a single unit test by name
 npm run e2e                                 # headless Firefox end-to-end suite (~15s), i.e. sh test/e2e/run.sh
 node test/server.js                         # local Basic-auth server on :8765 (user / secret)
+npm run icons                               # regenerate PNG icons (needs Pillow) from tools/make_icons.py
+npm run sign:unlisted / sign:listed         # AMO signing via web-ext; needs WEB_EXT_API_KEY/SECRET in the env
 ```
 
 - Don't run `node --test test/`: it also picks up `test/server.js` (never exits) and the e2e browser scripts. When adding a unit test file, add it to the `test` script in `package.json` (an explicit list, because Windows shells don't expand `test/*.test.js`).
 - Build, lint and unit tests are cross-platform. The e2e suite is POSIX sh (macOS, Linux, or WSL on Windows); `.gitattributes` keeps `*.sh` at LF endings for that.
 - `test/e2e/run.sh` finds Firefox Developer Edition via web-ext's `firefoxdeveloperedition` alias (default install path on each OS; override with `FIREFOX=...`). It copies `extension/` to a temp dir, appends `test/e2e/background-steps.js` to the copy's `background.js`, adds two test pages, runs it with `web-ext run`, and greps `E2E <step> PASS|FAIL` lines from Firefox's stdout (`dump()`). Individual e2e steps can't be run on their own; it exits non-zero on any FAIL or a timeout.
 - The user installs the extension by reinstalling the rebuilt `.xpi` from `about:addons` (needs `xpinstall.signatures.required = false`). After behavior changes, rebuild with `npm run build`.
+
+- Store submission lives in `amo/` (`metadata.json` = AMO v5 create payload incl. reviewer notes; `icon-128.png`); see `amo/README.md`. Bump `version` in `extension/manifest.json` for every upload. Keep the gecko id `basic-auth-remember@local`: saved logins are stored under it, so changing it empties users' vaults. `test/manifest.test.js` checks icons, the id and the data-collection declaration.
 
 ## Architecture
 
