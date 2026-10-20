@@ -72,11 +72,22 @@ Console. Every challenge logs either the matching pattern or
 
 ```sh
 node --test test/*.test.js      # pattern matching and encryption unit tests
-test/e2e/run.sh                 # headless Firefox: vault, lock, redirects, badges
+test/e2e/run.sh                 # headless Firefox end-to-end (about 15 seconds)
 node test/server.js              # http://localhost:8765, user / secret
 ```
 
-Save `localhost:8765` → `user` / `secret` in the popup and reload: the page
+- **Unit tests** cover host-pattern matching and the other `store.js`
+  helpers, and the encryption in `vault.js`.
+- **End-to-end** (`test/e2e/`) loads a copy of the extension in headless
+  Firefox Developer Edition with `background-steps.js` appended to the
+  background script, and checks: migrating old logins, lock/unlock, wrong
+  passphrases, save/delete surviving a lock, wrong saved passwords (401 once,
+  ✗ badge), unmatched hosts, redirects between hosts, passphrase changes,
+  badges, page messaging, handler errors, and reset. `options-steps.js` drives
+  the real options page (two-click reset, error display, regex validation,
+  Test a host). Not covered: the popup UI and private windows.
+
+Manually: save `localhost:8765` → `user` / `secret` in the popup and reload: the page
 shows "Authenticated!" with no dialog. Save a wrong password: the native
 dialog appears once.
 
