@@ -9,17 +9,10 @@ the extension.
 - `icon-128.png`: the listing icon, uploaded on the add-on's "Edit Product
   Page" screen. Generated with the extension's icons by `npm run icons`.
 - `screenshots/`: 1280x800 listing screenshots of the real popup and options
-  page with example.com data, uploaded by hand on the same screen.
-  Regenerate them after UI changes with `npm run screenshots` (headless
-  Firefox; `tools/screenshots/`). Suggested captions:
-
-  | File | Caption |
-  | --- | --- |
-  | `1-popup-signs-in.png` | The popup shows the site you're on and who it signs in as. |
-  | `2-popup-locked.png` | Logins stay encrypted until you unlock once per Firefox session. |
-  | `3-options-logins.png` | Manage every saved login: exact hosts, wildcards and regular expressions. |
-  | `4-options-edit-and-test.png` | Edit a login in place, and test which saved login a host would use. |
-  | `5-popup-dark.png` | Follows your light or dark system theme. |
+  page with example.com data. `screenshots/captions.json` sets their order
+  and captions. Regenerate the images after UI changes with
+  `npm run screenshots` (headless Firefox; `tools/screenshots/`), and upload
+  them to the listing with `npm run screenshots:upload` (see below).
 
 ## Before the first submission
 
@@ -61,5 +54,28 @@ How `.env.amo` is protected:
   in your password manager or the macOS Keychain and export it in the shell
   you sign from instead.
 
-Signed files land in `web-ext-artifacts/` (gitignored). Screenshots for the
-listing are uploaded by hand on AMO.
+Signed files land in `web-ext-artifacts/` (gitignored).
+
+## Screenshots
+
+After the listed submission exists, upload the screenshots with their captions:
+
+```sh
+npm run screenshots:upload -- --dry-run   # list what would be uploaded (no credentials needed)
+npm run screenshots:upload                # upload; refuses if the listing already has screenshots
+npm run screenshots:upload -- --resume    # continue an interrupted upload
+npm run screenshots:upload -- --replace   # delete the listing's screenshots, then upload these
+```
+
+`tools/upload-screenshots.js` uses the same `.env.amo` credentials as signing.
+AMO has no batch upload, and a caption can't be sent with the image, so each
+screenshot is two writes (upload, then caption): 10 writes for all five.
+
+**Rate limits.** AMO allows each user 3 writes a minute, 10 an hour and 24 a
+day across add-on, version and screenshot changes, including signing
+(addons-server `src/olympia/api/throttling.py`; reads don't count). The script
+spaces writes 21 seconds apart, and when AMO answers 429 it waits as long as
+AMO says, which can be most of an hour if you've just signed. Repeated failed
+requests can get an account temporarily blocked, so let it wait rather than
+re-running it. If a run is interrupted, `--resume` captions the screenshots
+already uploaded instead of uploading them again.

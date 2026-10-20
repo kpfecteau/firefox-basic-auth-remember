@@ -15,6 +15,7 @@ npm run e2e                                 # headless Firefox end-to-end suite 
 node test/server.js                         # local Basic-auth server on :8765 (user / secret)
 npm run icons                               # regenerate PNG icons (needs Pillow) from tools/make_icons.py
 npm run screenshots                         # regenerate amo/screenshots/*.png (headless Firefox, fake example.com data)
+npm run screenshots:upload -- --dry-run     # preview the AMO screenshot upload (real upload needs the user's .env.amo; don't run it unless asked)
 npm run sign:unlisted / sign:listed         # AMO signing via web-ext; needs WEB_EXT_API_KEY/SECRET in the env
 ```
 

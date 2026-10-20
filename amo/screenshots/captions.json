@@ -1,0 +1,22 @@
+[
+  {
+    "file": "1-popup-signs-in.png",
+    "caption": "The popup shows the site you're on and who it signs in as."
+  },
+  {
+    "file": "2-popup-locked.png",
+    "caption": "Logins stay encrypted until you unlock once per Firefox session."
+  },
+  {
+    "file": "3-options-logins.png",
+    "caption": "Manage every saved login: exact hosts, wildcards and regular expressions."
+  },
+  {
+    "file": "4-options-edit-and-test.png",
+    "caption": "Edit a login in place, and test which saved login a host would use."
+  },
+  {
+    "file": "5-popup-dark.png",
+    "caption": "Follows your light or dark system theme."
+  }
+]
