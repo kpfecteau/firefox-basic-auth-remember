@@ -11,6 +11,7 @@
     "icons": "python3 tools/make_icons.py",
     "screenshots": "sh tools/screenshots/run.sh",
     "screenshots:upload": "node tools/upload-screenshots.js",
+    "sign:check": "node tools/sign.js --check",
     "sign:unlisted": "node tools/sign.js --channel=unlisted",
     "sign:listed": "node tools/sign.js --channel=listed --amo-metadata amo/metadata.json --approval-timeout=0"
   }

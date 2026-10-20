@@ -69,3 +69,17 @@ test("AMO listing metadata is valid and names a license", () => {
   assert.ok(meta.version.license);
   assert.ok(meta.categories.firefox.length > 0);
 });
+
+test("extension/ (everything that gets packaged) holds no credential files", () => {
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else files.push(path.relative(extDir, full));
+    }
+  };
+  walk(extDir);
+  const suspicious = files.filter((f) => /(^|\/)\.env|\.pem$|\.key$|credential|secret/i.test(f));
+  assert.deepStrictEqual(suspicious, []);
+});

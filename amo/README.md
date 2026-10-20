@@ -50,7 +50,27 @@ How `.env.amo` is protected:
 - `.claude/settings.json` denies Claude Code's Read and Edit tools on it, and
   those deny rules also apply to shell commands Claude runs in its sandbox.
 - These are guardrails for Claude Code and git, not encryption: any program
-  running as you can read the file. For stronger protection keep the secret
+  running as you can read the file. That includes the npm scripts when
+  Claude runs them: the deny rule stops Claude's file tools, not programs it
+  starts. The scripts are written so the values never reach their output
+  (see below), which is what keeps them out of Claude's context.
+
+### What the scripts print
+
+- `npm run build` packages only `extension/`; the credentials file is at the
+  repo root and never packaged (`test/manifest.test.js` checks `extension/`
+  holds no credential files).
+- `tools/sign.js` prints only variable names (missing or set). It passes the
+  values to web-ext through the environment, not the command line (which
+  other processes can list), and runs web-ext with `--no-config-discovery`,
+  since web-ext's `--verbose` logs option values when a config file and the
+  environment both set one. web-ext itself keeps the key and secret in
+  private fields and logs only URLs, IDs and AMO's responses.
+- `tools/upload-screenshots.js` prints file names, preview IDs, wait times
+  and AMO's error responses. The secret only signs a short-lived token sent in
+  a request header, which is never logged.
+- `npm run sign:check` reports whether the credentials are usable, by name,
+  without contacting AMO. For stronger protection keep the secret
   in your password manager or the macOS Keychain and export it in the shell
   you sign from instead.
 

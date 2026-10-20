@@ -50,11 +50,20 @@ function missingCredentials(env) {
  * Loads .env.amo (if present) under the current environment, checks the
  * credentials, and runs `web-ext sign` with the given arguments.
  *
+ * Secrets reach web-ext only through the environment (never argv, which other
+ * processes can list), and only names are ever printed. --no-config-discovery
+ * stops web-ext from merging a web-ext config file (package.json "webExt",
+ * ~/.web-ext-config.*): with --verbose it logs option values when a config
+ * file and the environment both set one.
+ *
  * @param {string[]} args  Arguments for `web-ext sign`, e.g. --channel=listed.
+ *   `--check` only reports whether the credentials are usable (by name) and
+ *   exits without contacting AMO.
+ * @param {{envFile?: string}} [options]  Override the credentials file (tests).
  * @returns {number} Process exit code.
  */
-function main(args) {
-  const fromFile = fs.existsSync(ENV_FILE) ? parseEnv(fs.readFileSync(ENV_FILE, "utf8")) : {};
+function main(args, { envFile = ENV_FILE } = {}) {
+  const fromFile = fs.existsSync(envFile) ? parseEnv(fs.readFileSync(envFile, "utf8")) : {};
   const env = { ...fromFile, ...process.env };
   const missing = missingCredentials(env);
   if (missing.length) {
@@ -65,9 +74,13 @@ function main(args) {
     );
     return 1;
   }
+  if (args.includes("--check")) {
+    console.log(`AMO credentials are set (${REQUIRED.join(", ")}).`);
+    return 0;
+  }
   const result = spawnSync(
     "npx",
-    ["-y", "web-ext@8", "sign", "-s", "extension", "-a", "web-ext-artifacts", ...args],
+    ["-y", "web-ext@8", "sign", "--no-config-discovery", "-s", "extension", "-a", "web-ext-artifacts", ...args],
     { cwd: ROOT, env, stdio: "inherit", shell: process.platform === "win32" }
   );
   return result.status ?? 1;
@@ -75,4 +88,4 @@ function main(args) {
 
 if (require.main === module) process.exit(main(process.argv.slice(2)));
 
-module.exports = { parseEnv, missingCredentials };
+module.exports = { parseEnv, missingCredentials, main };
