@@ -52,6 +52,12 @@ For quick hacking instead, use `about:debugging` → This Firefox →
 - Firefox won't offer to save the site passwords you type here: those fields
   are masked text inputs, not `type="password"`, so its password manager
   ignores the form. It can still offer to save your vault passphrase.
+  The trade-off: screen readers treat a masked text field like any other
+  text field, so they may read the saved password aloud when the field is
+  focused, or echo characters as you type. If you use a screen reader,
+  change the `#password` inputs in `extension/popup.html` and
+  `extension/options.html` back to `type="password"` (and expect Firefox to
+  offer to save those passwords).
 - The toolbar badge shows ✓ when credentials were supplied on that tab and
   ✗ when the server rejected them.
 - If saved credentials are wrong, the extension steps aside and Firefox's

@@ -170,6 +170,19 @@
     $("cancel-edit").click();
     check("edit-cancel", formTitle() === "Add or update a login" && $("host").value === "" && !document.querySelector("#rows tr.editing"));
 
+    // In edit mode, Recent site only replaces the host: the edited login's
+    // username and password stay. (background-steps.js left http tabs open on
+    // *.localhost:8765 hosts, so there is a recent site.)
+    await waitFor(() => clickEdit("other.test"));
+    $("use-current").click();
+    const hostFilled = await waitFor(() => $("host").value !== "other.test" && $("host").value !== "");
+    check(
+      "recent-site-keeps-login-in-edit",
+      hostFilled && $("username").value === "o" && $("password").value === "o" && formTitle() === "Edit login",
+      `host=${$("host").value} user=${$("username").value}`
+    );
+    $("cancel-edit").click();
+
     // Lock now hides the table again.
     $("lock").click();
     check("lock-now", await waitFor(() => !$("locked").hidden && $("unlocked").hidden));

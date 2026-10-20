@@ -80,7 +80,8 @@
             <label for="password">Password</label>
             <!-- Deliberately not type="password": Firefox only offers to save
                  logins from forms with a password-type field, and these are
-                 other sites' passwords. .secret masks it with CSS instead. -->
+                 other sites' passwords. .secret masks it with CSS instead.
+                 Trade-off: screen readers may read it aloud; see the README. -->
             <input id="password" type="text" class="secret" autocomplete="off" spellcheck="false" autocapitalize="off"
                    data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">
             <div class="actions">

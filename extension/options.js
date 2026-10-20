@@ -264,11 +264,19 @@ $("cancel-edit").addEventListener("click", () => {
 });
 
 // "Recent site" button: fills the form from the most recently viewed website
-// tab (this page is itself the active tab, so it can't use that).
+// tab (this page is itself the active tab, so it can't use that). In edit
+// mode it only replaces the host, so saving moves the edited login there with
+// its own username and password rather than whatever the new host has (or
+// blank fields).
 $("use-current").addEventListener("click", handle(async () => {
   const key = await currentSiteHostKey();
   if (!key) {
     setStatus("There's no website open to take the host from.", true);
+    return;
+  }
+  if (editing !== null) {
+    $("host").value = key;
+    setStatus(`Update login will move this login to ${key}.`);
     return;
   }
   const cred = (await vault("list"))[key];
