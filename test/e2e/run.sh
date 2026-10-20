@@ -16,7 +16,8 @@ EXT="$WORK/ext"
 LOG="$WORK/firefox.log"
 
 mkdir -p "$EXT"
-cp "$ROOT"/extension/* "$EXT"/
+# -R and "/.": the extension has subfolders (icons/).
+cp -R "$ROOT"/extension/. "$EXT"/
 cat "$HERE/background-steps.js" >> "$EXT/background.js"
 cp "$HERE/page.js" "$EXT/e2e-page.js"
 printf '<!doctype html><meta charset="utf-8"><script src="store.js"></script><script src="e2e-page.js"></script>\n' > "$EXT/e2e-page.html"
