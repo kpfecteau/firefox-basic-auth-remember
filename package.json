@@ -2,6 +2,7 @@
   "name": "basic-auth-remember",
   "private": true,
   "description": "Firefox extension that remembers HTTP Basic auth logins. Scripts only; no dependencies (web-ext runs via npx).",
+  "license": "MIT",
   "scripts": {
     "build": "npx -y web-ext@8 build -s extension -a . -n basic-auth-remember.xpi --overwrite-dest",
     "lint": "npx -y web-ext@8 lint -s extension",

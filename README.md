@@ -117,7 +117,7 @@ dialog appears once.
 The extension is set up for addons.mozilla.org: it declares that it collects
 no data, has icons, and has listing text and reviewer notes in
 `amo/metadata.json`. See [`amo/README.md`](amo/README.md) for what to decide
-before the first upload (license, support contact) and how to sign with
+before the first upload (support contact, add-on id) and how to sign with
 `npm run sign:unlisted` or `npm run sign:listed`. A signed build installs in
 regular Firefox without the `xpinstall.signatures.required` change.
 
@@ -145,3 +145,7 @@ Saved logins are encrypted with a passphrase you choose:
 
 While unlocked, anything that can inspect Firefox's memory or the extension's
 background page (`about:debugging` → Inspect) can see the logins.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

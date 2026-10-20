@@ -11,9 +11,8 @@ the extension.
 
 ## Before the first submission
 
-1. **License:** `metadata.json` says `all-rights-reserved` as a placeholder.
-   Pick the one you want from AMO's list (e.g. `MPL-2.0`, `MIT`) and change
-   `version.license`.
+1. **License:** MIT (`version.license` in `metadata.json`, an AMO license
+   slug).
 2. **Support contact (optional):** add `"support_email": {"en-US": "..."}` or
    `"homepage": {"en-US": "https://..."}` to `metadata.json`.
 3. **Add-on id:** `basic-auth-remember@local` in `extension/manifest.json`.
