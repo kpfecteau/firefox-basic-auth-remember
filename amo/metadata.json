@@ -1,10 +1,18 @@
 {
-  "categories": { "firefox": ["privacy-security", "web-development"] },
+  "categories": {
+    "firefox": [
+      "privacy-security",
+      "web-development"
+    ]
+  },
   "summary": {
     "en-US": "Signs in to HTTP Basic auth sites (staging servers, dev boxes) for you, so the browser's login dialog never appears. Logins are saved per host pattern and encrypted under a passphrase you unlock once per session."
   },
   "description": {
     "en-US": "Firefox's password manager can save HTTP Basic auth logins, but it only fills in the dialog: you still have to confirm it every session. Basic Auth Remember answers the login prompt for you.\n\n**How it works**\n\n- Save a login for a host from the toolbar popup, or manage them all on the options page.\n- Hosts can be exact (`staging.example.com`, `localhost:8080`), wildcards (`*.example.com`), or regular expressions (`/^review-\\d+\\.example\\.com$/`).\n- When a site asks for a login and a saved one matches, it's sent automatically. If the site rejects it, Firefox's normal dialog appears instead; there's no retry loop.\n- The toolbar icon shows ✓ when a login was sent and ✗ when it was rejected.\n\n**Privacy and security**\n\n- Logins are encrypted with AES-256-GCM using a key derived from your passphrase (PBKDF2-SHA256, 600,000 iterations). Only the encrypted copy is stored. You unlock once per Firefox session.\n- Nothing is sent anywhere except the login itself, to the site that asked for it. No analytics, no remote code, no network requests of its own.\n- Firefox won't offer to save these site passwords in its own password manager.\n\n**Private windows**: allow \"Run in Private Windows\" for the extension in about:addons to use it there."
+  },
+  "homepage": {
+    "en-US": "https://github.com/kpfecteau/firefox-basic-auth-remember"
   },
   "requires_payment": false,
   "version": {

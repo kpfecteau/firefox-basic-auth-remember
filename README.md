@@ -1,7 +1,6 @@
 # Basic Auth Remember
 
-<!-- Replace OWNER with the GitHub user or organization once the repo exists. -->
-[![CI](https://github.com/OWNER/firefox-basic-auth-remember/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/firefox-basic-auth-remember/actions/workflows/ci.yml)
+[![CI](https://github.com/kpfecteau/firefox-basic-auth-remember/actions/workflows/ci.yml/badge.svg)](https://github.com/kpfecteau/firefox-basic-auth-remember/actions/workflows/ci.yml)
 
 A local Firefox extension that remembers HTTP Basic (and Digest) auth
 credentials per host and supplies them automatically, so the login dialog

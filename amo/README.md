@@ -25,8 +25,9 @@ the extension.
 
 1. **License:** MIT (`version.license` in `metadata.json`, an AMO license
    slug).
-2. **Support contact (optional):** add `"support_email": {"en-US": "..."}` or
-   `"homepage": {"en-US": "https://..."}` to `metadata.json`.
+2. **Homepage:** https://github.com/kpfecteau/firefox-basic-auth-remember (`homepage` in `metadata.json`). To add a
+   support email, add `"support_email": {"en-US": "..."}`; you can also set a
+   support site (e.g. the repo's issues page) on AMO's Edit Product Page.
 3. **Add-on id:** `basic-auth-remember@local` in `extension/manifest.json`.
    Firefox stores saved logins under the id, so keeping it means an installed
    copy upgrades to the store version without losing its vault. If AMO says
