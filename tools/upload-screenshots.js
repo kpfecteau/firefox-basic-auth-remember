@@ -182,9 +182,10 @@ function planUpload(shots, existing, { resume, replace }) {
  * Uploads the screenshots (see the header comment for options).
  *
  * @param {string[]} args  Command-line arguments.
+ * @param {{envFile?: string}} [options]  Override the credentials file (tests).
  * @returns {Promise<number>} Process exit code.
  */
-async function main(args) {
+async function main(args, { envFile = path.join(ROOT, ".env.amo") } = {}) {
   const shots = loadShots();
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "extension", "manifest.json"), "utf8"));
   const guid = manifest.browser_specific_settings.gecko.id;
@@ -195,7 +196,6 @@ async function main(args) {
     return 0;
   }
 
-  const envFile = path.join(ROOT, ".env.amo");
   const fromFile = fs.existsSync(envFile) ? parseEnv(fs.readFileSync(envFile, "utf8")) : {};
   const env = { ...fromFile, ...process.env };
   const missing = missingCredentials(env);
@@ -250,4 +250,4 @@ if (require.main === module) {
   );
 }
 
-module.exports = { makeJwt, loadShots, throttleWaitSeconds, amo, planUpload, pacing };
+module.exports = { makeJwt, loadShots, throttleWaitSeconds, amo, planUpload, pacing, main };
