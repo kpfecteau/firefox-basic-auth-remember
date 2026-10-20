@@ -1,17 +1,20 @@
 #!/usr/bin/env node
-// Uploads the store screenshots in amo/screenshots/ to the add-on's AMO
-// listing, in the order and with the captions in amo/screenshots/captions.json.
-//   npm run screenshots:upload               upload (refuses if the listing already has screenshots)
-//   npm run screenshots:upload -- --resume   continue an interrupted upload (see below)
-//   npm run screenshots:upload -- --replace  delete the listing's screenshots first, then upload
-//   npm run screenshots:upload -- --dry-run  show what would be uploaded; no credentials or network
+// Uploads the add-on's AMO listing media: the store screenshots in
+// amo/screenshots/ (in the order and with the captions in
+// amo/screenshots/captions.json), or with --icon the listing icon.
+//   npm run media:upload               upload (refuses if the listing already has screenshots)
+//   npm run media:upload -- --resume   continue an interrupted upload (see below)
+//   npm run media:upload -- --replace  delete the listing's screenshots first, then upload
+//   npm run media:upload -- --dry-run  show what would be uploaded; no credentials or network
+//   npm run media:upload -- --icon     set the listing icon to amo/icon-128.png instead (1 write)
 // Uses the API credentials in .env.amo, like tools/sign.js. Values are never printed.
 //
 // AMO API v5 (https://mozilla.github.io/addons-server/topics/api/addons.html):
 // each preview is one multipart image upload; its caption has to be set with a
 // separate JSON PATCH, because captions are per-locale objects and a multipart
 // field can only carry a string. There is no batch endpoint. So a full upload
-// is 2 writes per screenshot.
+// is 2 writes per screenshot. The icon is one multipart PATCH of the add-on
+// itself (field "icon"; square PNG or JPEG, 128x128 recommended).
 //
 // AMO rate limits (addons-server src/olympia/api/throttling.py,
 // addon_submission_throttles, applied to preview, add-on and version writes;
@@ -27,6 +30,7 @@ const { parseEnv, missingCredentials } = require("./sign.js");
 
 const ROOT = path.join(__dirname, "..");
 const SHOTS_DIR = path.join(ROOT, "amo", "screenshots");
+const ICON = path.join(ROOT, "amo", "icon-128.png");
 const API = "https://addons.mozilla.org/api/v5/addons/addon";
 
 // 3 writes/minute => at most one every 20s; 21s leaves a margin.
@@ -189,7 +193,12 @@ async function main(args, { envFile = path.join(ROOT, ".env.amo") } = {}) {
   const shots = loadShots();
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "extension", "manifest.json"), "utf8"));
   const guid = manifest.browser_specific_settings.gecko.id;
+  const iconOnly = args.includes("--icon");
 
+  if (iconOnly && args.includes("--dry-run")) {
+    console.log(`Would set ${guid}'s listing icon to amo/icon-128.png (1 write).`);
+    return 0;
+  }
   if (args.includes("--dry-run")) {
     console.log(`Would upload ${shots.length} screenshots to ${guid} (${shots.length * 2} writes):`);
     shots.forEach((s, i) => console.log(`  ${i + 1}. ${s.file} — ${s.caption}`));
@@ -205,6 +214,15 @@ async function main(args, { envFile = path.join(ROOT, ".env.amo") } = {}) {
   }
   const creds = { key: env.WEB_EXT_API_KEY, secret: env.WEB_EXT_API_SECRET };
   const addonUrl = `${API}/${encodeURIComponent(guid)}`;
+
+  if (iconOnly) {
+    const form = new FormData();
+    form.append("icon", new Blob([fs.readFileSync(ICON)], { type: "image/png" }), path.basename(ICON));
+    const updated = await amo("PATCH", `${addonUrl}/`, creds, form);
+    console.log(`Icon set (AMO resizes it in the background; it may take a minute to show).`);
+    console.log(`Done: https://addons.mozilla.org/developers/addon/${updated.slug}/edit`);
+    return 0;
+  }
 
   const addon = await amo("GET", `${addonUrl}/`, creds);
   const plan = planUpload(shots, addon.previews || [], {

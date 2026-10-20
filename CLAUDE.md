@@ -15,7 +15,8 @@ npm run e2e                                 # headless Firefox end-to-end suite 
 node test/server.js                         # local Basic-auth server on :8765 (user / secret)
 npm run icons                               # regenerate PNG icons (needs Pillow) from tools/make_icons.py
 npm run screenshots                         # regenerate amo/screenshots/*.png (headless Firefox, fake example.com data)
-npm run screenshots:upload -- --dry-run     # preview the AMO screenshot upload (real upload needs the user's .env.amo; don't run it unless asked)
+npm run media:upload -- --dry-run           # preview the AMO screenshot upload (real upload needs the user's .env.amo; don't run it unless asked)
+npm run media:upload -- --icon              # set the AMO listing icon from amo/icon-128.png (1 write; same rules)
 npm run sign:unlisted / sign:listed         # AMO signing via web-ext; needs WEB_EXT_API_KEY/SECRET in the env
 ```
 
@@ -26,7 +27,7 @@ npm run sign:unlisted / sign:listed         # AMO signing via web-ext; needs WEB
 
 - Store submission lives in `amo/` (`metadata.json` = AMO v5 create payload incl. reviewer notes; `icon-128.png`); see `amo/README.md`. Bump `version` in `extension/manifest.json` for every upload. Keep the gecko id `basic-auth-remember@local`: saved logins are stored under it, so changing it empties users' vaults. `test/manifest.test.js` checks icons, the id and the data-collection declaration.
 
-- `.env.amo` holds the user's AMO API secret: never read, print, edit or `cat` it (denied in `.claude/settings.json`). The deny rule doesn't stop programs Claude runs, so `tools/sign.js` and `tools/upload-screenshots.js` can load it; they must never print values (only names), pass them via env not argv, and keep `--no-config-discovery` on web-ext. Don't add logging of env, headers or tokens. `npm run sign:check` is safe to run; don't run `sign:*` or `screenshots:upload` (uploads, rate-limited) unless asked.
+- `.env.amo` holds the user's AMO API secret: never read, print, edit or `cat` it (denied in `.claude/settings.json`). The deny rule doesn't stop programs Claude runs, so `tools/sign.js` and `tools/upload-media.js` can load it; they must never print values (only names), pass them via env not argv, and keep `--no-config-discovery` on web-ext. Don't add logging of env, headers or tokens. `npm run sign:check` is safe to run; don't run `sign:*` or `media:upload` (uploads, rate-limited) unless asked.
 - After UI changes to the popup or options page, regenerate the store screenshots (`npm run screenshots`). `tools/screenshots/run.sh` copies `extension/`, injects `shim.js` (fake `browser` + data) and `stage.js`/`stage.css` (popup scaled into a 1280x800 frame with a caption) or `drive.js` (options-page interactions), and uses `firefox --screenshot`; drivers must use promises, not timers, so they finish before the capture.
 - CI is `.github/workflows/ci.yml` (push to main/master, PRs): unit tests on ubuntu/macos/windows, lint with `--warnings-as-errors` + build (xpi artifact), and the e2e suite on ubuntu with Firefox Developer Edition from `browser-actions/setup-firefox` (`FIREFOX` = its `firefox-path` output). The repo is https://github.com/kpfecteau/firefox-basic-auth-remember (public); the README badge and the AMO homepage point there.
 

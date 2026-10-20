@@ -6,13 +6,14 @@ the extension.
 - `metadata.json`: listing text, categories, license, and notes for Mozilla's
   reviewers (`version.approval_notes`). `npm run sign:listed` sends it with a
   new listed submission. The format is AMO's add-on API (v5) create payload.
-- `icon-128.png`: the listing icon, uploaded on the add-on's "Edit Product
-  Page" screen. Generated with the extension's icons by `npm run icons`.
+- `icon-128.png`: the listing icon, uploaded with
+  `npm run media:upload -- --icon` (see below) or on the add-on's "Edit
+  Product Page" screen. Generated with the extension's icons by `npm run icons`.
 - `screenshots/`: 1280x800 listing screenshots of the real popup and options
   page with example.com data. `screenshots/captions.json` sets their order
   and captions. Regenerate the images after UI changes with
   `npm run screenshots` (headless Firefox; `tools/screenshots/`), and upload
-  them to the listing with `npm run screenshots:upload` (see below).
+  them to the listing with `npm run media:upload` (see below).
 
 ## Before the first submission
 
@@ -66,7 +67,7 @@ How `.env.amo` is protected:
   since web-ext's `--verbose` logs option values when a config file and the
   environment both set one. web-ext itself keeps the key and secret in
   private fields and logs only URLs, IDs and AMO's responses.
-- `tools/upload-screenshots.js` prints file names, preview IDs, wait times
+- `tools/upload-media.js` prints file names, preview IDs, wait times
   and AMO's error responses. The secret only signs a short-lived token sent in
   a request header, which is never logged.
 - `npm run sign:check` reports whether the credentials are usable, by name,
@@ -87,13 +88,13 @@ number it has already received, and each attempt counts against the rate limit.
 After the listed submission exists, upload the screenshots with their captions:
 
 ```sh
-npm run screenshots:upload -- --dry-run   # list what would be uploaded (no credentials needed)
-npm run screenshots:upload                # upload; refuses if the listing already has screenshots
-npm run screenshots:upload -- --resume    # continue an interrupted upload
-npm run screenshots:upload -- --replace   # delete the listing's screenshots, then upload these
+npm run media:upload -- --dry-run   # list what would be uploaded (no credentials needed)
+npm run media:upload                # upload; refuses if the listing already has screenshots
+npm run media:upload -- --resume    # continue an interrupted upload
+npm run media:upload -- --replace   # delete the listing's screenshots, then upload these
 ```
 
-`tools/upload-screenshots.js` uses the same `.env.amo` credentials as signing.
+`tools/upload-media.js` uses the same `.env.amo` credentials as signing.
 AMO has no batch upload, and a caption can't be sent with the image, so each
 screenshot is two writes (upload, then caption): 10 writes for all five.
 
@@ -105,3 +106,14 @@ AMO says, which can be most of an hour if you've just signed. Repeated failed
 requests can get an account temporarily blocked, so let it wait rather than
 re-running it. If a run is interrupted, `--resume` captions the screenshots
 already uploaded instead of uploading them again.
+
+## Icon
+
+```sh
+npm run media:upload -- --icon --dry-run   # show what would be set
+npm run media:upload -- --icon             # set the listing icon to icon-128.png (1 write)
+```
+
+AMO takes the icon as one multipart PATCH of the add-on (square PNG or JPEG,
+128x128 recommended) and resizes it in the background, so the new icon can
+take a minute to appear. `--icon` leaves the screenshots alone.

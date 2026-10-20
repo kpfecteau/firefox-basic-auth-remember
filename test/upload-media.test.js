@@ -1,11 +1,11 @@
-// Unit tests for tools/upload-screenshots.js: node --test test/*.test.js
+// Unit tests for tools/upload-media.js: node --test test/*.test.js
 // (No network and no real credentials.)
 const test = require("node:test");
 const assert = require("node:assert");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { makeJwt, loadShots, throttleWaitSeconds, amo, planUpload, pacing, main } = require("../tools/upload-screenshots.js");
+const { makeJwt, loadShots, throttleWaitSeconds, amo, planUpload, pacing, main } = require("../tools/upload-media.js");
 
 // Real runs space writes 21s apart; tests turn that off unless they test it.
 pacing.writeIntervalMs = 0;
@@ -160,12 +160,16 @@ async function runMain(t, args, existingPreviews) {
   let nextId = 100;
   t.mock.method(globalThis, "fetch", async (url, init) => {
     const call = { method: init.method, url };
-    if (init.body instanceof FormData) call.image = init.body.get("image")?.name;
+    if (init.body instanceof FormData) {
+      call.fields = [...init.body.keys()];
+      call.image = (init.body.get("image") || init.body.get("icon"))?.name;
+    }
     else if (init.body) call.json = JSON.parse(init.body);
     calls.push(call);
     if (init.method === "GET") return Response.json({ slug: "basic-auth-remember", previews: existingPreviews });
     if (init.method === "POST") return Response.json({ id: nextId++ }, { status: 201 });
     if (init.method === "DELETE") return new Response(null, { status: 204 });
+    if (url === `${ADDON}/`) return Response.json({ slug: "basic-auth-remember" });
     return Response.json({});
   });
   const output = [];
@@ -196,7 +200,7 @@ test("main --resume: captions the interrupted upload, then uploads the rest in o
   const files = loadShots().map((s) => s.file);
   const expected = [{ method: "GET", url: `${ADDON}/` }, captionCall(`${ADDON}/previews/9/`, files[0], 0)];
   files.slice(1).forEach((file, i) => {
-    expected.push({ method: "POST", url: `${ADDON}/previews/`, image: file });
+    expected.push({ method: "POST", url: `${ADDON}/previews/`, fields: ["image"], image: file });
     expected.push(captionCall(`${ADDON}/previews/${100 + i}/`, file, i + 1));
   });
   assert.deepStrictEqual(calls, expected);
@@ -220,4 +224,20 @@ test("main without a flag refuses to touch a listing that has screenshots", asyn
   assert.strictEqual(code, 1);
   assert.deepStrictEqual(calls.map((c) => c.method), ["GET"]);
   assert.match(output, /--resume/);
+});
+
+test("main --icon: one multipart PATCH of the add-on with only the icon", async (t) => {
+  // Existing screenshots don't matter: --icon never reads or touches them.
+  const { code, calls, output } = await runMain(t, ["--icon"], [{ id: 9, position: 0 }]);
+  assert.strictEqual(code, 0);
+  assert.deepStrictEqual(calls, [{ method: "PATCH", url: `${ADDON}/`, fields: ["icon"], image: "icon-128.png" }]);
+  assert.match(output, /Icon set/);
+  assert.ok(!output.includes("fake-secret-for-tests"), "the secret was printed");
+});
+
+test("main --icon --dry-run makes no requests", async (t) => {
+  const { code, calls, output } = await runMain(t, ["--icon", "--dry-run"], []);
+  assert.strictEqual(code, 0);
+  assert.deepStrictEqual(calls, []);
+  assert.match(output, /icon-128\.png \(1 write\)/);
 });
