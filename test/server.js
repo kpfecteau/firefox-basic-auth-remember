@@ -5,6 +5,15 @@ const http = require("http");
 const PORT = 8765;
 const expected = "Basic " + Buffer.from("user:secret").toString("base64");
 
+/**
+ * Request handler: 401 + Basic challenge unless the Authorization header
+ * carries user/secret; then /hop?to=HOST redirects and anything else answers
+ * "Authenticated!".
+ *
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ * @returns {void}
+ */
 http
   .createServer((req, res) => {
     if (req.headers.authorization !== expected) {

@@ -1,4 +1,9 @@
-// Unit tests for host pattern matching: node --test test/
+// Unit tests for host pattern matching (findCredential in extension/store.js).
+// Run: node --test test/*.test.js
+// (Not `node --test test/`: that would also run test/server.js, which never exits.)
+//
+// store.js is a plain browser script, not a module, so it's evaluated in a vm
+// context and its globals are read back from that context.
 const test = require("node:test");
 const assert = require("node:assert");
 const fs = require("fs");
@@ -9,6 +14,7 @@ const ctx = vm.createContext({ URL });
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../extension/store.js"), "utf8"), ctx);
 const { findCredential } = ctx;
 
+// One saved entry per pattern kind; the username names which entry matched.
 const all = {
   "example.com": { username: "exact", password: "" },
   "localhost:8080": { username: "port", password: "" },
@@ -17,6 +23,14 @@ const all = {
   "*.dev.test:8443": { username: "wild-port", password: "" },
   "/^stage\\d+\\.corp$/": { username: "regex", password: "" },
 };
+/**
+ * Looks up `host` in `all` and returns which entry answered.
+ *
+ * @param {string} host    Hostname being challenged.
+ * @param {number|string} port  Port as Firefox reports it (-1/"" = default).
+ * @param {string} scheme  "http" or "https" (default "https").
+ * @returns {string|null} The matching entry's username, or null for no match.
+ */
 const who = (host, port, scheme = "https") => findCredential(all, host, port, scheme)?.username ?? null;
 
 test("exact host and default port", () => {

@@ -5,8 +5,24 @@
 // an earlier step can't answer for us.
 
 (async () => {
+  /**
+   * Prints one step result for run.sh to collect.
+   *
+   * @param {string} name     Step name (lowercase, dashes).
+   * @param {boolean} ok      Whether the step passed.
+   * @param {string} detail   Extra context printed after PASS/FAIL.
+   * @returns {void}
+   */
   const check = (name, ok, detail = "") => dump(`E2E ${name} ${ok ? "PASS" : "FAIL"} ${detail}\n`);
+  /**
+   * Fetches a URL from the background page; Firefox still routes the request
+   * through onAuthRequired, so this exercises the real auth path.
+   *
+   * @param {string} url
+   * @returns {Promise<number>} The final HTTP status after any auth/redirects.
+   */
   const status = (url) => fetch(url).then((r) => r.status);
+  // Pre-1.3.0 plaintext entry; one wildcard covers every *.localhost test host.
   const legacy = { "*.localhost:8765": { username: "user", password: "secret" } };
 
   try {

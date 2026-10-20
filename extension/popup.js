@@ -1,16 +1,49 @@
+// Toolbar popup. Shows one of three forms depending on the vault state:
+//   setup-form   no passphrase yet ("new"): choose one, migrating old logins
+//   unlock-form  "locked": enter the passphrase
+//   form         "unlocked": save/forget credentials for the current site
+// All credential reads and writes go to the background via vault() (store.js).
+
+/**
+ * Shorthand for document.getElementById.
+ *
+ * @param {string} id  Element id.
+ * @returns {HTMLElement|null}
+ */
 const $ = (id) => document.getElementById(id);
 
+/**
+ * Shows a message in the popup's status line.
+ *
+ * @param {string} text      Message; "" clears it.
+ * @param {boolean} isError  Styles the message as an error (red).
+ * @returns {void}
+ */
 function setStatus(text, isError = false) {
   $("status").textContent = text;
   $("status").classList.toggle("error", isError);
 }
 
+/**
+ * Shows exactly one of the popup's forms and focuses its first input.
+ *
+ * @param {"setup-form"|"unlock-form"|"form"} formId  Form to show.
+ * @returns {void}
+ */
 function show(formId) {
   for (const id of ["setup-form", "unlock-form", "form"]) $(id).hidden = id !== formId;
   const first = $(formId).querySelector("input");
   if (first) first.focus();
 }
 
+/**
+ * Fills the username and password fields with the credentials saved under
+ * exactly `pattern` (no pattern matching), or clears them if there are none.
+ *
+ * @param {string} pattern  A saved host pattern, already normalized.
+ * @returns {Promise<void>}
+ * @throws {Error} "Vault is locked" if the vault was locked meanwhile.
+ */
 async function fillFor(pattern) {
   const cred = (await vault("list"))[pattern];
   $("username").value = cred ? cred.username : "";
@@ -18,6 +51,14 @@ async function fillFor(pattern) {
   setStatus(cred ? "Saved credentials found." : "");
 }
 
+/**
+ * Shows the credential form and pre-fills it for the active tab: the saved
+ * pattern that matches the tab's host (exact, wildcard or regex), or else the
+ * tab's own host[:port]. Leaves the host empty for tabs without a host
+ * (e.g. about: pages).
+ *
+ * @returns {Promise<void>}
+ */
 async function showCredentialForm() {
   show("form");
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -38,6 +79,12 @@ async function showCredentialForm() {
   }
 }
 
+/**
+ * Entry point, run each time the popup opens: shows the private-window warning
+ * if needed, then the form for the current vault state.
+ *
+ * @returns {Promise<void>}
+ */
 async function init() {
   if (!(await browser.extension.isAllowedIncognitoAccess())) {
     $("private-warning").hidden = false;
@@ -57,6 +104,7 @@ async function init() {
   }
 }
 
+// Setup form: creates the vault after checking both passphrase fields match.
 $("setup-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   if ($("setup-pass").value !== $("setup-confirm").value) {
@@ -68,6 +116,8 @@ $("setup-form").addEventListener("submit", async (e) => {
   await showCredentialForm();
 });
 
+// Unlock form: on a wrong passphrase, shows the error and selects the field
+// for retyping; on success, switches to the credential form.
 $("unlock-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   try {
@@ -81,8 +131,11 @@ $("unlock-form").addEventListener("submit", async (e) => {
   await showCredentialForm();
 });
 
+// Editing the host field loads whatever is saved under the new value.
 $("host").addEventListener("change", () => fillFor(normalizePattern($("host").value)));
 
+// "Current host" button: replaces the host field with the active website
+// tab's host[:port] and loads any credentials saved under it.
 $("use-current").addEventListener("click", async () => {
   const key = await currentSiteHostKey();
   if (!key) {
@@ -93,6 +146,7 @@ $("use-current").addEventListener("click", async () => {
   await fillFor(key);
 });
 
+// Save: normalizes the host pattern, rejects an invalid /regex/, then saves.
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const pattern = normalizePattern($("host").value);
@@ -104,6 +158,7 @@ $("form").addEventListener("submit", async (e) => {
   setStatus(`Saved for ${pattern}. Reload the page to sign in.`);
 });
 
+// Forget: deletes the credentials saved under the pattern in the host field.
 $("delete").addEventListener("click", async () => {
   const pattern = normalizePattern($("host").value);
   await vault("delete", { pattern });
@@ -112,6 +167,7 @@ $("delete").addEventListener("click", async () => {
   setStatus(`Forgot ${pattern}.`);
 });
 
+// Lock: locks the vault and switches to the unlock form.
 $("lock").addEventListener("click", async () => {
   await vault("lock");
   $("unlock-pass").value = "";
@@ -119,6 +175,7 @@ $("lock").addEventListener("click", async () => {
   show("unlock-form");
 });
 
+// "Manage all…" link: opens the options page and closes the popup.
 $("manage").addEventListener("click", (e) => {
   e.preventDefault();
   browser.runtime.openOptionsPage();

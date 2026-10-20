@@ -1,12 +1,40 @@
+// Options page ("Manage all…"). Shows one of three sections depending on the
+// vault state:
+//   #setup     no passphrase yet ("new"): choose one, migrating old logins
+//   #locked    "locked": unlock, or reset if the passphrase is forgotten
+//   #unlocked  "unlocked": list/add/edit/delete credentials, test which
+//              pattern matches a host, change the passphrase, lock
+// All credential reads and writes go to the background via vault() (store.js).
+// The page re-renders whenever the background broadcasts "stateChanged", so
+// changes made from the popup show up here too.
+
+/**
+ * Shorthand for document.getElementById.
+ *
+ * @param {string} id  Element id.
+ * @returns {HTMLElement|null}
+ */
 const $ = (id) => document.getElementById(id);
 
+/**
+ * Shows a message in the page's status line.
+ *
+ * @param {string} text      Message; "" clears it.
+ * @param {boolean} isError  Styles the message as an error (red).
+ * @returns {void}
+ */
 function setStatus(text, isError = false) {
   $("status").textContent = text;
   $("status").classList.toggle("error", isError);
 }
 
-// Wraps an event handler so vault errors (e.g. "Vault is locked" after the
-// popup locked it) show in the status line and the page re-syncs.
+/**
+ * Wraps an event handler so vault errors (e.g. "Vault is locked" after the
+ * popup locked it) show in the status line and the page re-syncs.
+ *
+ * @param {(e: Event) => Promise<void>|void} fn  The handler to wrap.
+ * @returns {(e: Event) => Promise<void>} A listener for addEventListener.
+ */
 function handle(fn) {
   return async (e) => {
     try {
@@ -18,6 +46,14 @@ function handle(fn) {
   };
 }
 
+/**
+ * Re-draws the page for the current vault state: shows the matching section,
+ * the migration note when old plaintext logins exist, and the credential
+ * table when unlocked. Also disarms the reset button, so it always needs two
+ * clicks after being shown again.
+ *
+ * @returns {Promise<void>}
+ */
 async function render() {
   const reset = $("reset");
   delete reset.dataset.armed;
@@ -35,6 +71,14 @@ async function render() {
   if (state === "unlocked") await renderRows();
 }
 
+/**
+ * Re-builds the credential table, sorted by pattern, with Edit (copy the row
+ * into the form) and Delete buttons per row. Passwords are never shown in the
+ * table; Edit puts them into the (masked) password field.
+ *
+ * @returns {Promise<void>}
+ * @throws {Error} "Vault is locked" if called while locked.
+ */
 async function renderRows() {
   const all = await vault("list");
   const rows = $("rows");
@@ -73,6 +117,7 @@ async function renderRows() {
 // Changes re-render via the background's "stateChanged" message (below), so
 // the handlers here only report status.
 
+// Setup form: creates the vault after checking both passphrase fields match.
 $("setup-form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   if ($("setup-pass").value !== $("setup-confirm").value) {
@@ -84,6 +129,7 @@ $("setup-form").addEventListener("submit", handle(async (e) => {
   setStatus("Vault created and unlocked.");
 }));
 
+// Unlock form; a wrong passphrase surfaces through handle().
 $("unlock-form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   await vault("unlock", { passphrase: $("unlock-pass").value });
@@ -91,6 +137,7 @@ $("unlock-form").addEventListener("submit", handle(async (e) => {
   setStatus("Unlocked.");
 }));
 
+// "Lock now" button.
 $("lock").addEventListener("click", handle(async () => {
   await vault("lock");
   setStatus("Locked.");
@@ -108,6 +155,8 @@ $("reset").addEventListener("click", handle(async (e) => {
   setStatus("All saved credentials deleted. Set a new passphrase.");
 }));
 
+// Add/update form: normalizes the host pattern, rejects an invalid /regex/,
+// then saves.
 $("form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   const pattern = normalizePattern($("host").value);
@@ -120,6 +169,8 @@ $("form").addEventListener("submit", handle(async (e) => {
   e.target.reset();
 }));
 
+// "Current host" button: fills the form from the most recently viewed website
+// tab (this page is itself the active tab, so it can't use that).
 $("use-current").addEventListener("click", handle(async () => {
   const key = await currentSiteHostKey();
   if (!key) {
@@ -133,6 +184,9 @@ $("use-current").addEventListener("click", handle(async () => {
   setStatus(cred ? "Saved credentials found." : "");
 }));
 
+// "Test a host": shows which saved pattern would answer for host[:port],
+// using the same matching as the background. Assumes http, so a port typed
+// as :443 is treated as non-default.
 $("test-form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   const [host, port] = $("test-host").value.trim().split(":");
@@ -142,6 +196,7 @@ $("test-form").addEventListener("submit", handle(async (e) => {
     : "No saved credentials match.";
 }));
 
+// Change passphrase form; a wrong current passphrase surfaces through handle().
 $("change-form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   if ($("change-next").value !== $("change-confirm").value) {
@@ -159,6 +214,8 @@ browser.runtime.onMessage.addListener((message) => {
   if (message.type === "stateChanged") render();
 });
 
+// Warns that logins in private windows will still prompt until the user
+// allows the extension there (only the user can, in about:addons).
 browser.extension.isAllowedIncognitoAccess().then((allowed) => {
   $("private-warning").hidden = allowed;
 });

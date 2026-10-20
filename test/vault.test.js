@@ -1,4 +1,9 @@
-// Unit tests for vault encryption: node --test test/vault.test.js
+// Unit tests for vault encryption (extension/vault.js).
+// Run: node --test test/*.test.js
+//
+// vault.js is a plain browser script, not a module, so it's evaluated in a vm
+// context given Node's WebCrypto and base64 globals, and its functions are
+// read back from that context.
 const test = require("node:test");
 const assert = require("node:assert");
 const fs = require("fs");
@@ -9,6 +14,7 @@ const ctx = vm.createContext({ crypto, TextEncoder, TextDecoder, btoa, atob, Uin
 vm.runInContext(fs.readFileSync(path.join(__dirname, "../extension/vault.js"), "utf8"), ctx);
 const { createVault, openVault, encryptJson } = ctx;
 
+// Sample credentials; "hunter2" is checked for in the stored record.
 const creds = { "example.com": { username: "u", password: "hunter2" } };
 
 test("round trip with the right passphrase", async () => {
