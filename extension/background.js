@@ -225,15 +225,20 @@ const handlers = {
 
   /**
    * Adds or replaces the credentials for a host pattern and saves the vault.
+   * When editing an existing entry, `replaces` names it: if the pattern was
+   * changed, the old entry is removed in the same write, so an edit renames
+   * the entry instead of adding a second one.
    *
-   * @param {{pattern: string, username: string, password: string}} message
-   *   pattern should already be normalized (see normalizePattern in store.js).
+   * @param {{pattern: string, username: string, password: string, replaces?: string}} message
+   *   pattern (and replaces) should already be normalized (see
+   *   normalizePattern in store.js).
    * @returns {Promise<void>}
    * @throws {Error} "Vault is locked".
    */
-  async save({ pattern, username, password }) {
+  async save({ pattern, username, password, replaces }) {
     requireUnlocked();
     credentials[pattern] = { username, password };
+    if (replaces && replaces !== pattern) delete credentials[replaces];
     await persist();
   },
 

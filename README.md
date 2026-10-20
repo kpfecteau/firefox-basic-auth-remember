@@ -46,6 +46,12 @@ For quick hacking instead, use `about:debugging` → This Firefox →
   saving if you like.
 - **Manage all logins** (or the add-on's Preferences) lists, edits and deletes
   saved entries, and has a **Test a host** box to see which entry matches.
+  **Edit** puts a login in the form as "Edit login": **Update login** replaces
+  that entry (renaming it if you change the host), **Cancel** backs out. It
+  won't rename onto a pattern that already has a login.
+- Firefox won't offer to save the site passwords you type here: those fields
+  are masked text inputs, not `type="password"`, so its password manager
+  ignores the form. It can still offer to save your vault passphrase.
 - The toolbar badge shows ✓ when credentials were supplied on that tab and
   ✗ when the server rejected them.
 - If saved credentials are wrong, the extension steps aside and Firefox's

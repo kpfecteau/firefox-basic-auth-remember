@@ -94,6 +94,82 @@
     submit("change-form", { "change-current": "pw2", "change-next": "a", "change-confirm": "b" });
     check("change-mismatch", await waitFor(() => statusText() === "The new passphrases don't match."), statusText());
 
+    // The site-password field must never be type="password" (Firefox would
+    // offer to save it) but must still be masked.
+    const pw = $("password");
+    const masked = getComputedStyle(pw).getPropertyValue("-webkit-text-security") === "disc";
+    check("password-field-not-saveable", pw.type === "text" && masked, `type=${pw.type} masked=${masked}`);
+
+    /**
+     * Saved patterns in the vault, sorted.
+     *
+     * @returns {Promise<string[]>}
+     */
+    const patterns = async () => Object.keys(await vault("list")).sort();
+    /**
+     * Clicks the Edit button on the table row for `pattern`.
+     *
+     * @param {string} pattern
+     * @returns {boolean} false if there is no such row.
+     */
+    const clickEdit = (pattern) => {
+      const tr = [...$("rows").rows].find((r) => r.dataset.pattern === pattern);
+      tr?.querySelector("button").click();
+      return Boolean(tr);
+    };
+    const formTitle = () => $("form-title").textContent;
+
+    // Edit enters edit mode for that row.
+    const before = await patterns();
+    clickEdit("*.localhost:8765");
+    const inEdit =
+      formTitle() === "Edit login" &&
+      $("form-submit").textContent === "Update login" &&
+      !$("cancel-edit").hidden &&
+      $("host").value === "*.localhost:8765" &&
+      $("password").value === "secret" &&
+      document.querySelector("#rows tr.editing")?.dataset.pattern === "*.localhost:8765";
+    check("edit-mode", inEdit, `title=${formTitle()}`);
+
+    // Saving with the same pattern updates that entry in place.
+    submit("form", { username: "user-edited" });
+    await waitFor(() => statusText() === "Updated the login for *.localhost:8765.");
+    const afterUpdate = await vault("list");
+    check(
+      "edit-updates-in-place",
+      JSON.stringify(await patterns()) === JSON.stringify(before) && afterUpdate["*.localhost:8765"].username === "user-edited",
+      `${statusText()} ${JSON.stringify(await patterns())}`
+    );
+    check("edit-mode-ends-after-save", await waitFor(() => formTitle() === "Add or update a login" && $("cancel-edit").hidden));
+
+    // Changing the pattern while editing renames the entry, not a new one.
+    await waitFor(() => clickEdit("*.localhost:8765"));
+    submit("form", { host: "*.renamed.localhost:8765", username: "user" });
+    await waitFor(() => statusText().startsWith("Updated the login and moved it"));
+    const renamed = await patterns();
+    check(
+      "edit-renames",
+      renamed.includes("*.renamed.localhost:8765") && !renamed.includes("*.localhost:8765") && renamed.length === before.length,
+      JSON.stringify(renamed)
+    );
+
+    // Renaming onto another saved pattern is refused, and nothing changes.
+    submit("form", { host: "other.test", username: "o", password: "o" });
+    await waitFor(() => statusText() === "Saved the login for other.test.");
+    await waitFor(() => clickEdit("other.test"));
+    submit("form", { host: "*.renamed.localhost:8765" });
+    const refusedRename = await waitFor(() => statusText().startsWith("There's already a login for *.renamed.localhost:8765"));
+    const untouched = await vault("list");
+    check(
+      "edit-refuses-overwrite",
+      refusedRename && untouched["other.test"]?.username === "o" && untouched["*.renamed.localhost:8765"]?.username === "user",
+      statusText()
+    );
+
+    // Cancel leaves edit mode without saving.
+    $("cancel-edit").click();
+    check("edit-cancel", formTitle() === "Add or update a login" && $("host").value === "" && !document.querySelector("#rows tr.editing"));
+
     // Lock now hides the table again.
     $("lock").click();
     check("lock-now", await waitFor(() => !$("locked").hidden && $("unlocked").hidden));

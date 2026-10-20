@@ -51,7 +51,11 @@
       <label for="username">Username</label>
       <input id="username" class="literal" autocomplete="off" spellcheck="false" required>
       <label for="password">Password</label>
-      <input id="password" type="password" autocomplete="off">
+      <!-- Deliberately not type="password": Firefox only offers to save
+           logins from forms with a password-type field, and this is another
+           site's password. .secret masks it with CSS instead. -->
+      <input id="password" type="text" class="secret" autocomplete="off" spellcheck="false" autocapitalize="off"
+             data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">
       <div class="actions">
         <button type="submit" class="primary">Save login</button>
         <button type="button" id="delete" class="danger">Forget</button>

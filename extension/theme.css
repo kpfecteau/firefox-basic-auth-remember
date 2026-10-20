@@ -125,6 +125,11 @@ input {
   font: 13px var(--ui);
 }
 
+/* Saved sites' passwords use a text input masked with CSS, never
+   type="password", so Firefox's password manager doesn't offer to save them.
+   (The vault passphrase fields stay type="password" and may be saved.) */
+input.secret { -webkit-text-security: disc; }
+
 /* Hosts, patterns and usernames are literals: show them in mono. */
 input.literal { font-family: var(--mono); font-size: 12.5px; }
 

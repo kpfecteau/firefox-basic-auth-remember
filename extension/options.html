@@ -68,7 +68,7 @@
 
       <div class="pair">
         <section>
-          <h2>Add or update a login</h2>
+          <h2 id="form-title">Add or update a login</h2>
           <form id="form">
             <label for="host">Host or pattern</label>
             <div class="input-row">
@@ -78,8 +78,15 @@
             <label for="username">Username</label>
             <input id="username" class="literal" autocomplete="off" spellcheck="false" required>
             <label for="password">Password</label>
-            <input id="password" type="password" autocomplete="off">
-            <div class="actions"><button type="submit" class="primary">Save login</button></div>
+            <!-- Deliberately not type="password": Firefox only offers to save
+                 logins from forms with a password-type field, and these are
+                 other sites' passwords. .secret masks it with CSS instead. -->
+            <input id="password" type="text" class="secret" autocomplete="off" spellcheck="false" autocapitalize="off"
+                   data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">
+            <div class="actions">
+              <button type="submit" id="form-submit" class="primary">Save login</button>
+              <button type="button" id="cancel-edit" class="quiet" hidden>Cancel</button>
+            </div>
           </form>
         </section>
 

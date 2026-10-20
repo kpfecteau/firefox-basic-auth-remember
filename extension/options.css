@@ -98,6 +98,9 @@ main > section > h2:first-child { margin-top: 6px; }
 
 .logins .row-actions button { height: 26px; padding: 0 6px; }
 
+/* The login being edited in the form below. */
+.logins tr.editing td { background: color-mix(in srgb, var(--steel) 8%, transparent); }
+
 .logins .empty {
   padding: 16px 0;
   color: var(--slate);

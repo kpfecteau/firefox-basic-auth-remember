@@ -16,6 +16,60 @@
  */
 const $ = (id) => document.getElementById(id);
 
+// Pattern of the saved login being edited (after its Edit button was
+// clicked), or null when the form adds a new login. Saving while editing
+// replaces that entry, even if its host pattern was changed.
+let editing = null;
+
+/**
+ * Puts the form into edit mode for a saved login: fills it in, retitles it,
+ * shows Cancel, and highlights the login's row.
+ *
+ * @param {string} pattern  The saved pattern being edited.
+ * @param {{username: string, password: string}} cred  Its saved login.
+ * @returns {void}
+ */
+function startEditing(pattern, cred) {
+  editing = pattern;
+  $("host").value = pattern;
+  $("username").value = cred.username;
+  $("password").value = cred.password;
+  $("form-title").textContent = "Edit login";
+  $("form-submit").textContent = "Update login";
+  $("cancel-edit").hidden = false;
+  markEditingRow();
+  $("password").focus();
+  $("form").scrollIntoView({ block: "nearest" });
+}
+
+/**
+ * Leaves edit mode: clears the form and restores its "add" title and button.
+ *
+ * @returns {void}
+ */
+function stopEditing() {
+  editing = null;
+  $("form").reset();
+  $("form-title").textContent = "Add or update a login";
+  $("form-submit").textContent = "Save login";
+  $("cancel-edit").hidden = true;
+  markEditingRow();
+}
+
+/**
+ * Highlights the table row of the login being edited, if any.
+ *
+ * @returns {void}
+ */
+function markEditingRow() {
+  for (const tr of $("rows").rows) {
+    const isEditing = editing !== null && tr.dataset.pattern === editing;
+    tr.classList.toggle("editing", isEditing);
+    if (isEditing) tr.setAttribute("aria-current", "true");
+    else tr.removeAttribute("aria-current");
+  }
+}
+
 /**
  * Shows a message in the page's status line.
  *
@@ -70,6 +124,8 @@ async function render() {
     $("legacy-note").hidden = false;
   }
 
+  if (state !== "unlocked" && editing !== null) stopEditing();
+
   let stateText = state === "new" ? "No passphrase yet" : "Locked";
   if (state === "unlocked") {
     const count = await renderRows();
@@ -80,9 +136,11 @@ async function render() {
 }
 
 /**
- * Re-builds the logins table, sorted by pattern, with Edit (copy the row into
- * the form) and Delete buttons per row. Passwords are never shown in the
- * table; Edit puts them into the (masked) password field.
+ * Re-builds the logins table, sorted by pattern, with Edit (put the login in
+ * the form, in edit mode) and Delete buttons per row. Passwords are never
+ * shown in the table; Edit puts them into the (masked) password field. Leaves
+ * edit mode if the login being edited no longer exists (e.g. it was deleted
+ * from the popup).
  *
  * @returns {Promise<number>} How many logins are saved.
  * @throws {Error} "Vault is locked" if called while locked.
@@ -93,6 +151,7 @@ async function renderRows() {
   rows.replaceChildren();
 
   const keys = Object.keys(all).sort();
+  if (editing !== null && !(editing in all)) stopEditing();
   if (keys.length === 0) {
     const tr = rows.insertRow();
     const td = tr.insertCell();
@@ -104,6 +163,7 @@ async function renderRows() {
 
   for (const key of keys) {
     const tr = rows.insertRow();
+    tr.dataset.pattern = key;
     const patternCell = tr.insertCell();
     patternCell.className = "literal";
     patternCell.textContent = key;
@@ -113,18 +173,13 @@ async function renderRows() {
 
     const edit = document.createElement("button");
     edit.textContent = "Edit";
-    edit.addEventListener("click", () => {
-      $("host").value = key;
-      $("username").value = all[key].username;
-      $("password").value = all[key].password;
-      $("password").focus();
-      $("form").scrollIntoView({ block: "nearest" });
-    });
+    edit.addEventListener("click", () => startEditing(key, all[key]));
 
     const del = document.createElement("button");
     del.className = "danger";
     del.textContent = "Delete";
     del.addEventListener("click", handle(async () => {
+      if (key === editing) stopEditing();
       await vault("delete", { pattern: key });
       setStatus(`Deleted the login for ${key}.`);
     }));
@@ -133,6 +188,7 @@ async function renderRows() {
     actions.className = "row-actions";
     actions.append(edit, del);
   }
+  markEditingRow();
   return keys.length;
 }
 
@@ -178,7 +234,9 @@ $("reset").addEventListener("click", handle(async (e) => {
 }));
 
 // Add/update form: normalizes the host pattern, rejects an invalid /regex/,
-// then saves.
+// then saves. In edit mode it replaces the login being edited (renaming it if
+// the pattern changed), and refuses to rename onto another saved pattern so
+// that login isn't silently overwritten.
 $("form").addEventListener("submit", handle(async (e) => {
   e.preventDefault();
   const pattern = normalizePattern($("host").value);
@@ -186,10 +244,24 @@ $("form").addEventListener("submit", handle(async (e) => {
     setStatus("That regular expression isn't valid.", true);
     return;
   }
-  await vault("save", { pattern, username: $("username").value, password: $("password").value });
-  setStatus(`Saved the login for ${pattern}.`);
-  e.target.reset();
+  const renaming = editing !== null && pattern !== editing;
+  if (renaming && pattern in (await vault("list"))) {
+    setStatus(`There's already a login for ${pattern}. Edit or delete that one instead.`, true);
+    return;
+  }
+  const replaces = editing;
+  await vault("save", { pattern, username: $("username").value, password: $("password").value, replaces });
+  if (replaces === null) setStatus(`Saved the login for ${pattern}.`);
+  else if (renaming) setStatus(`Updated the login and moved it from ${replaces} to ${pattern}.`);
+  else setStatus(`Updated the login for ${pattern}.`);
+  stopEditing();
 }));
+
+// Cancel (edit mode only): discards the changes and returns to adding.
+$("cancel-edit").addEventListener("click", () => {
+  stopEditing();
+  setStatus("");
+});
 
 // "Recent site" button: fills the form from the most recently viewed website
 // tab (this page is itself the active tab, so it can't use that).
